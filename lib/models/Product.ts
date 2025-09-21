@@ -1,0 +1,46 @@
+import type { ObjectId } from "mongodb"
+
+export interface Product {
+  _id?: ObjectId
+  id: string
+  name: string
+  category: "chicken" | "fish" | "beef"
+  price: number
+  image: string
+  description: string
+  cutTypes: string[]
+  skinOptions?: string[]
+  available: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface CartItem {
+  id: string
+  name: string
+  price: number
+  image: string
+  category: string
+  quantity: number
+  weight: number
+  skinOption?: string
+  cutType?: string
+  customInstructions?: string
+}
+
+export interface Analytics {
+  _id?: ObjectId
+  type: "page_visit" | "product_view"
+  page?: string
+  productId?: string
+  timestamp: Date
+  userAgent?: string
+  ip?: string
+}
+
+export interface AdminUser {
+  _id?: ObjectId
+  username: string
+  password: string // In production, this should be hashed
+  createdAt: Date
+}
