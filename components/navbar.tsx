@@ -1,25 +1,25 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { ShoppingCart, Menu } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { useCart } from "@/lib/cart-context"
-import { useState } from "react"
-import { cn } from "@/lib/utils"
+import Link from "next/link";
+import { ShoppingCart, Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useCart } from "@/lib/cart-context";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 export function Navbar() {
-  const { state } = useCart()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { state } = useCart();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const totalItems = state.items.reduce((sum, item) => sum + item.quantity, 0)
+  const totalItems = state.items.reduce((sum, item) => sum + item.quantity, 0);
 
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/products", label: "Products" },
     { href: "/cart", label: "Cart" },
     { href: "/info", label: "Info" },
-  ]
+  ];
 
   return (
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
@@ -27,10 +27,16 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">FC</span>
+            <div className="w-10 h-10 rounded-lg overflow-hidden">
+              <img
+                src="/nav-icon.jpg"
+                alt="Live Fresh Logo"
+                className="w-full h-full object-cover"
+              />
             </div>
-            <span className="font-bold text-xl text-foreground">Fresh Cuts</span>
+            <span className="font-bebas-neue font-bold text-xl text-foreground">
+              Live Fresh
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -49,7 +55,11 @@ export function Navbar() {
           {/* Cart Icon */}
           <div className="flex items-center space-x-4">
             <Link href="/cart">
-              <Button variant="outline" size="sm" className="relative bg-transparent">
+              <Button
+                variant="outline"
+                size="sm"
+                className="relative bg-transparent"
+              >
                 <ShoppingCart className="h-4 w-4" />
                 {totalItems > 0 && (
                   <Badge
@@ -78,7 +88,7 @@ export function Navbar() {
         <div
           className={cn(
             "md:hidden overflow-hidden transition-all duration-200 ease-in-out",
-            isMenuOpen ? "max-h-48 pb-4" : "max-h-0",
+            isMenuOpen ? "max-h-48 pb-4" : "max-h-0"
           )}
         >
           <div className="flex flex-col space-y-2 pt-4 border-t">
@@ -96,5 +106,5 @@ export function Navbar() {
         </div>
       </div>
     </nav>
-  )
+  );
 }

@@ -1,0 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+
+:root {
+  --font-bebas-neue: 'Bebas Neue', sans-serif;
+  /* Add more font variables here as needed */
+}
+
+/* Define CSS classes for each font */
+.font-bebas-neue {
+  font-family: var(--font-bebas-neue);
+}
+
+/* Add more font classes here as needed */

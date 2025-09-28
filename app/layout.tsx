@@ -1,17 +1,17 @@
 import type React from "react";
 import type { Metadata } from "next";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
+import "@/app/fonts/fonts.css";
 import { CartProvider } from "@/lib/cart-context";
 import { Navbar } from "@/components/navbar";
 import { Suspense } from "react";
 import AnalyticsProvider from "@/components/analytics-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { getFontClassNames } from "@/app/fonts/fonts";
 
 export const metadata: Metadata = {
-  title: "Fresh Cuts Butcher Shop",
+  title: "Live Fresh",
   description: "Premium quality chicken, fish, and beef with home delivery",
   generator: "v0.app",
 };
@@ -23,7 +23,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap"
+          rel="stylesheet"
+        />
+        <meta name="apple-mobile-web-app-title" content="Live Fresh" />
+      </head>
+      <body className={`${getFontClassNames()}`}>
         <CartProvider>
           <AnalyticsProvider>
             <Suspense fallback={<div>Loading...</div>}>

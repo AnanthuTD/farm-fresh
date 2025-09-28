@@ -17,7 +17,7 @@ export default function InfoPage() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-foreground mb-4">
-            About Fresh Cuts
+            About Live Fresh
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Your trusted local butcher shop, delivering the freshest chicken,
@@ -35,7 +35,7 @@ export default function InfoPage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground leading-relaxed">
-                Fresh Cuts began as a small family business with a simple
+                Live Fresh began as a small family business with a simple
                 mission: to provide the highest quality meat products to our
                 community. Over the years, we&apos;ve built strong relationships
                 with local farms and suppliers, ensuring that every cut meets

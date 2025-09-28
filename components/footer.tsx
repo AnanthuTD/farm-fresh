@@ -1,4 +1,4 @@
-import { Phone, Mail, MapPin, Clock } from "lucide-react"
+import { Phone, Mail, MapPin, Clock } from "lucide-react";
 
 export function Footer() {
   return (
@@ -7,10 +7,10 @@ export function Footer() {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Fresh Cuts Butcher Shop</h3>
+            <h3 className="text-lg font-semibold mb-4">Live Fresh</h3>
             <p className="text-background/80 text-sm mb-4">
-              Your trusted local butcher for premium quality meats since 1995. We pride ourselves on freshness and
-              exceptional service.
+              Your trusted local butcher for premium quality meats since 1995.
+              We pride ourselves on freshness and exceptional service.
             </p>
           </div>
 
@@ -53,17 +53,26 @@ export function Footer() {
             <h4 className="font-semibold mb-4">Quick Links</h4>
             <div className="space-y-2 text-sm">
               <div>
-                <a href="/products" className="hover:text-primary transition-colors">
+                <a
+                  href="/products"
+                  className="hover:text-primary transition-colors"
+                >
                   All Products
                 </a>
               </div>
               <div>
-                <a href="/info" className="hover:text-primary transition-colors">
+                <a
+                  href="/info"
+                  className="hover:text-primary transition-colors"
+                >
                   Cut Types Guide
                 </a>
               </div>
               <div>
-                <a href="/cart" className="hover:text-primary transition-colors">
+                <a
+                  href="/cart"
+                  className="hover:text-primary transition-colors"
+                >
                   Your Cart
                 </a>
               </div>
@@ -72,9 +81,9 @@ export function Footer() {
         </div>
 
         <div className="border-t border-background/20 mt-8 pt-8 text-center text-sm text-background/60">
-          <p>&copy; 2024 Fresh Cuts Butcher Shop. All rights reserved.</p>
+          <p>&copy; 2024 Live Fresh. All rights reserved.</p>
         </div>
       </div>
     </footer>
-  )
+  );
 }
