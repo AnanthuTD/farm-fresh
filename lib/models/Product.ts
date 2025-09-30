@@ -4,7 +4,7 @@ export interface Product {
   _id?: ObjectId
   id: string
   name: string
-  category: "chicken" | "fish" | "beef"
+  category: string
   price: number
   image: string
   description: string
@@ -13,6 +13,7 @@ export interface Product {
   available: boolean
   createdAt: Date
   updatedAt: Date
+  deletedAt?: Date
 }
 
 export interface CartItem {

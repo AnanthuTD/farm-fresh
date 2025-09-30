@@ -9,7 +9,7 @@ export function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-4">Live Fresh</h3>
             <p className="text-background/80 text-sm mb-4">
-              Your trusted local butcher for premium quality meats since 1995.
+              Your trusted local butcher for premium quality meats since 2000.
               We pride ourselves on freshness and exceptional service.
             </p>
           </div>
@@ -20,7 +20,7 @@ export function Footer() {
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
-                <span>+91 98765 43210</span>
+                <span>+91 6235628654</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
@@ -28,7 +28,7 @@ export function Footer() {
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                <span>123 Market Street, City</span>
+                <span>Shappumpady, Kakkanad, Kochi</span>
               </div>
             </div>
           </div>
@@ -39,11 +39,11 @@ export function Footer() {
             <div className="space-y-2 text-sm text-background/80">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                <span>Mon-Sat: 8AM - 8PM</span>
+                <span>Mon-Sat: 7AM - 7PM</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                <span>Sunday: 9AM - 6PM</span>
+                <span>Sunday: 7AM - 12PM</span>
               </div>
             </div>
           </div>

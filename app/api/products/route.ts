@@ -1,9 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getProducts, createProduct } from "@/lib/db-operations"
+import { getProducts, getAllProducts, createProduct } from "@/lib/db-operations"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const products = await getProducts()
+    const all = request.nextUrl.searchParams.get("all")
+    const products = all ? await getAllProducts() : await getProducts()
     return NextResponse.json(products)
   } catch (error) {
     console.error("Error fetching products:", error)

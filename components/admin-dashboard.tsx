@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/lib/auth-context"
 import ProductManagement from "./product-management"
+import CategoryManagement from "./category-management"
 import AnalyticsDashboard from "./analytics-dashboard"
 import { LogOut, Package, BarChart3 } from "lucide-react"
 
@@ -27,10 +28,14 @@ export default function AdminDashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="products" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="products" className="flex items-center gap-2">
               <Package className="h-4 w-4" />
               Product Management
+            </TabsTrigger>
+            <TabsTrigger value="categories" className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              Categories
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
@@ -44,6 +49,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="analytics">
             <AnalyticsDashboard />
+          </TabsContent>
+
+          <TabsContent value="categories">
+            <CategoryManagement />
           </TabsContent>
         </Tabs>
       </main>

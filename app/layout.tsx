@@ -6,6 +6,7 @@ import "@/app/fonts/fonts.css";
 import { CartProvider } from "@/lib/cart-context";
 import { Navbar } from "@/components/navbar";
 import { Suspense } from "react";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import AnalyticsProvider from "@/components/analytics-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { getFontClassNames } from "@/app/fonts/fonts";
@@ -37,16 +38,18 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Live Fresh" />
       </head>
       <body className={`${getFontClassNames()}`}>
-        <CartProvider>
-          <AnalyticsProvider>
-            <Suspense fallback={<div>Loading...</div>}>
-              <Navbar />
-              <main className="min-h-screen">{children}</main>
-            </Suspense>
-          </AnalyticsProvider>
-        </CartProvider>
-        <Analytics />
-        <Toaster />
+        <NuqsAdapter>
+          <CartProvider>
+            <AnalyticsProvider>
+              <Suspense fallback={<div>Loading...</div>}>
+                <Navbar />
+                <main className="min-h-screen">{children}</main>
+              </Suspense>
+            </AnalyticsProvider>
+          </CartProvider>
+          <Analytics />
+          <Toaster />
+        </NuqsAdapter>
       </body>
     </html>
   );

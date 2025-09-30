@@ -42,6 +42,8 @@ import { Plus, Edit, Trash2, Save, X } from "lucide-react";
 import type { Product } from "@/lib/models/Product";
 import Image from "next/image";
 
+interface CategoryItem { id: string; name: string }
+
 export default function ProductManagement() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +52,7 @@ export default function ProductManagement() {
   const [formData, setFormData] = useState({
     id: "",
     name: "",
-    category: "chicken" as "chicken" | "fish" | "beef",
+    category: "" as string,
     price: 0,
     image: "",
     description: "",
@@ -58,14 +60,17 @@ export default function ProductManagement() {
     skinOptions: "",
     available: true,
   });
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch("/api/products");
+      const response = await fetch("/api/products?all=1");
       if (response.ok) {
         const data = await response.json();
         setProducts(data);
@@ -74,6 +79,26 @@ export default function ProductManagement() {
       console.error("Error fetching products:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+      const res = await fetch("/api/categories", { cache: "no-store" });
+      if (res.ok) {
+        const data = (await res.json()) as CategoryItem[];
+        setCategories(Array.isArray(data) ? data : []);
+        // If not editing, initialize form category to first available
+        setFormData((prev) => ({
+          ...prev,
+          category: prev.category || (Array.isArray(data) && data[0]?.id) || "",
+        }));
+      }
+    } catch (e) {
+      console.error("Error fetching categories:", e);
+    } finally {
+      setCategoriesLoading(false);
     }
   };
 
@@ -153,7 +178,7 @@ export default function ProductManagement() {
     setFormData({
       id: "",
       name: "",
-      category: "chicken",
+      category: categories[0]?.id || "",
       price: 0,
       image: "",
       description: "",
@@ -226,17 +251,19 @@ export default function ProductManagement() {
                   <Label htmlFor="category">Category</Label>
                   <Select
                     value={formData.category}
-                    onValueChange={(value: "chicken" | "fish" | "beef") =>
+                    onValueChange={(value: string) =>
                       setFormData({ ...formData, category: value })
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder={categoriesLoading ? "Loading..." : "Select a category"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="chicken">Chicken</SelectItem>
-                      <SelectItem value="fish">Fish</SelectItem>
-                      <SelectItem value="beef">Beef</SelectItem>
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -369,11 +396,31 @@ export default function ProductManagement() {
                   </TableCell>
                   <TableCell>₹{product.price}</TableCell>
                   <TableCell>
-                    <Badge
-                      variant={product.available ? "default" : "destructive"}
-                    >
-                      {product.available ? "Available" : "Unavailable"}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={product.available ? "default" : "destructive"}>
+                        {product.available ? "Available" : "Unavailable"}
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          try {
+                            const res = await fetch(`/api/products/${product.id}`, {
+                              method: "PUT",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ available: !product.available }),
+                            });
+                            if (res.ok) {
+                              await fetchProducts();
+                            }
+                          } catch (e) {
+                            console.error("Failed to toggle availability", e);
+                          }
+                        }}
+                      >
+                        {product.available ? "Set Unavailable" : "Set Available"}
+                      </Button>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">

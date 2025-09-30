@@ -5,12 +5,7 @@ const features = [
   {
     icon: Truck,
     title: "Free Home Delivery",
-    description: "Free delivery on orders above ₹500 within 10km radius",
-  },
-  {
-    icon: Clock,
-    title: "Same Day Delivery",
-    description: "Order before 2 PM for same day delivery",
+    description: "Free delivery on all orders within 2km radius",
   },
   {
     icon: Shield,
@@ -38,7 +33,7 @@ export function DeliverySection() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => (
             <Card
               key={index}
