@@ -18,6 +18,92 @@ export async function getProducts(): Promise<Product[]> {
     return [];
   }
 }
+// Product Interest (users want to buy unavailable items)
+export async function incrementProductInterest(
+  productId: string
+): Promise<void> {
+  const db = await getDatabase();
+  if (!db) return;
+  try {
+    await db
+      .collection("product_interest")
+      .updateOne({ productId }, { $inc: { count: 1 } }, { upsert: true });
+  } catch (error) {
+    console.error("Error incrementing product interest:", error);
+  }
+}
+
+export async function listProductInterest(): Promise<
+  Array<{ _id: string; count: number }>
+> {
+  const db = await getDatabase();
+  if (!db) return [];
+  try {
+    const docs = await db
+      .collection<{ productId: string; count: number }>("product_interest")
+      .aggregate([
+        { $group: { _id: "$productId", count: { $sum: "$count" } } },
+        { $sort: { count: -1 } },
+      ])
+      .toArray();
+    return docs as any;
+  } catch (error) {
+    console.error("Error listing product interest:", error);
+    return [];
+  }
+}
+
+// Detailed product views with optional filters
+export async function getProductViewsDetailed(params: {
+  category?: string;
+  search?: string;
+  sort?: "views" | "name";
+}): Promise<
+  Array<{ id: string; name: string; category: string; views: number }>
+> {
+  const db = await getDatabase();
+  if (!db) return [];
+  const { category, search, sort = "views" } = params || {};
+  try {
+    const pipeline: any[] = [
+      { $match: { type: "product_view" } },
+      { $group: { _id: "$productId", views: { $sum: 1 } } },
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "id",
+          as: "product",
+        },
+      },
+      { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          id: "$_id",
+          name: { $ifNull: ["$product.name", "Unknown"] },
+          category: { $ifNull: ["$product.category", "unknown"] },
+          views: 1,
+        },
+      },
+    ];
+    if (category && category !== "all") {
+      pipeline.push({ $match: { category } });
+    }
+    if (search) {
+      pipeline.push({ $match: { name: { $regex: search, $options: "i" } } });
+    }
+    pipeline.push({ $sort: sort === "name" ? { name: 1 } : { views: -1 } });
+
+    const results = await db
+      .collection<Analytics>("analytics")
+      .aggregate(pipeline)
+      .toArray();
+    return results as any;
+  } catch (error) {
+    console.error("Error fetching detailed product views:", error);
+    return [];
+  }
+}
 
 // Store Settings
 export async function getStoreSettings(): Promise<StoreSettings | null> {

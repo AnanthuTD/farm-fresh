@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import { Eye, Users, TrendingUp, Package } from "lucide-react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 interface AnalyticsData {
   totalVisits: number
@@ -15,9 +17,11 @@ interface AnalyticsData {
 export default function AnalyticsDashboard() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [interest, setInterest] = useState<Array<{ _id: string; count: number }>>([])
 
   useEffect(() => {
     fetchAnalytics()
+    fetchInterest()
   }, [])
 
   const fetchAnalytics = async () => {
@@ -31,6 +35,18 @@ export default function AnalyticsDashboard() {
       console.error("Error fetching analytics:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchInterest = async () => {
+    try {
+      const res = await fetch("/api/product-interest")
+      if (res.ok) {
+        const data = (await res.json()) as Array<{ _id: string; count: number }>
+        setInterest(Array.isArray(data) ? data : [])
+      }
+    } catch (e) {
+      console.error("Error fetching interest:", e)
     }
   }
 
@@ -137,6 +153,11 @@ export default function AnalyticsDashboard() {
           <CardHeader>
             <CardTitle>Top Product Views</CardTitle>
             <CardDescription>Most viewed products</CardDescription>
+            <div className="mt-2">
+              <Link href="/admin/analytics/views">
+                <Button variant="outline" size="sm" className="bg-transparent">View all product views</Button>
+              </Link>
+            </div>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -191,6 +212,11 @@ export default function AnalyticsDashboard() {
           <CardHeader>
             <CardTitle>Product View Details</CardTitle>
             <CardDescription>Most viewed products with counts</CardDescription>
+            <div className="mt-2">
+              <Link href="/admin/analytics/views">
+                <Button variant="outline" size="sm" className="bg-transparent">Open full list with filters</Button>
+              </Link>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -207,6 +233,36 @@ export default function AnalyticsDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Suggested Products (based on user interest) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Suggested Products to Add</CardTitle>
+          <CardDescription>Based on users interested in unavailable items</CardDescription>
+          <div className="mt-2">
+            <Link href="/admin/interest">
+              <Button variant="outline" size="sm" className="bg-transparent">View interest details</Button>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {interest.length === 0 ? (
+            <div className="text-sm text-muted-foreground">No interest recorded yet</div>
+          ) : (
+            <div className="space-y-2">
+              {interest.slice(0, 5).map((it, idx) => (
+                <div key={it._id} className="flex justify-between items-center p-2 rounded-lg bg-gray-50">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">#{idx + 1}</Badge>
+                    <span className="font-medium">{it._id}</span>
+                  </div>
+                  <div className="font-semibold">{it.count} interested</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

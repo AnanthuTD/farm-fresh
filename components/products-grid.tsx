@@ -4,11 +4,12 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useSearchParams } from "next/navigation"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { fetchCategories, fetchProducts, qk } from "@/lib/queries"
 import Image from "next/image"
 import Link from "next/link"
+import { toast } from "sonner"
 
 interface ProductItem {
   id: string
@@ -138,9 +139,54 @@ export function ProductsGrid() {
                 )}
               </CardContent>
             </Link>
+            {!availableNow && !loading && (
+              <CardContent className="pt-0 px-4 pb-4">
+                <InterestButton productId={product.id} />
+              </CardContent>
+            )}
           </Card>
         )
       })}
     </div>
+  )
+}
+
+function InterestButton({ productId }: { productId: string }) {
+  const [done, setDone] = useState<boolean>(typeof window !== 'undefined' ? !!localStorage.getItem(`interest_${productId}`) : false)
+  const [loading, setLoading] = useState(false)
+  if (done) {
+    return <div className="text-xs text-muted-foreground">Thanks! We'll let the admin know.</div>
+  }
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="bg-transparent"
+      disabled={loading}
+      onClick={async () => {
+        try {
+          setLoading(true)
+          const res = await fetch('/api/product-interest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId }),
+          })
+          if (res.ok) {
+            localStorage.setItem(`interest_${productId}`, '1')
+            setDone(true)
+            toast.success('Noted your interest')
+          } else {
+            toast.error('Failed to record interest')
+          }
+        } catch (e) {
+          console.error(e)
+          toast.error('Failed to record interest')
+        } finally {
+          setLoading(false)
+        }
+      }}
+    >
+      {loading ? 'Submitting...' : 'Interested if available?'}
+    </Button>
   )
 }
