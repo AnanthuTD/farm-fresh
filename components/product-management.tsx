@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -41,12 +41,18 @@ import {
 import { Plus, Edit, Trash2, Save, X } from "lucide-react";
 import type { Product } from "@/lib/models/Product";
 import Image from "next/image";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchCategories as rqFetchCategories, fetchProducts as rqFetchProducts, qk } from "@/lib/queries";
 
 interface CategoryItem { id: string; name: string }
 
 export default function ProductManagement() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const qc = useQueryClient();
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: qk.products(true),
+    queryFn: () => rqFetchProducts(true) as Promise<Product[]>,
+    staleTime: 30_000,
+  });
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -60,47 +66,11 @@ export default function ProductManagement() {
     skinOptions: "",
     available: true,
   });
-  const [categories, setCategories] = useState<CategoryItem[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-
-  useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-  }, []);
-
-  const fetchProducts = async () => {
-    try {
-      const response = await fetch("/api/products?all=1");
-      if (response.ok) {
-        const data = await response.json();
-        setProducts(data);
-      }
-    } catch (error) {
-      console.error("Error fetching products:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      setCategoriesLoading(true);
-      const res = await fetch("/api/categories", { cache: "no-store" });
-      if (res.ok) {
-        const data = (await res.json()) as CategoryItem[];
-        setCategories(Array.isArray(data) ? data : []);
-        // If not editing, initialize form category to first available
-        setFormData((prev) => ({
-          ...prev,
-          category: prev.category || (Array.isArray(data) && data[0]?.id) || "",
-        }));
-      }
-    } catch (e) {
-      console.error("Error fetching categories:", e);
-    } finally {
-      setCategoriesLoading(false);
-    }
-  };
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+    queryKey: qk.categories,
+    queryFn: () => rqFetchCategories() as Promise<CategoryItem[]>,
+    staleTime: 60_000,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,21 +88,15 @@ export default function ProductManagement() {
     };
 
     try {
-      const url = editingProduct
-        ? `/api/products/${editingProduct.id}`
-        : "/api/products";
+      const url = editingProduct ? `/api/products/${editingProduct.id}` : "/api/products";
       const method = editingProduct ? "PUT" : "POST";
-
-      const response = await fetch(url, {
+      const res = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(productData),
       });
-
-      if (response.ok) {
-        await fetchProducts();
+      if (res.ok) {
+        await qc.invalidateQueries({ queryKey: qk.products(true) });
         resetForm();
         setIsAddDialogOpen(false);
         setEditingProduct(null);
@@ -161,13 +125,8 @@ export default function ProductManagement() {
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this product?")) {
       try {
-        const response = await fetch(`/api/products/${id}`, {
-          method: "DELETE",
-        });
-
-        if (response.ok) {
-          await fetchProducts();
-        }
+        const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
+        if (res.ok) await qc.invalidateQueries({ queryKey: qk.products(true) });
       } catch (error) {
         console.error("Error deleting product:", error);
       }
@@ -411,7 +370,7 @@ export default function ProductManagement() {
                               body: JSON.stringify({ available: !product.available }),
                             });
                             if (res.ok) {
-                              await fetchProducts();
+                              await qc.invalidateQueries({ queryKey: qk.products(true) });
                             }
                           } catch (e) {
                             console.error("Failed to toggle availability", e);

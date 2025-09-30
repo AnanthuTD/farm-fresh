@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchCategories as rqFetchCategories, qk } from "@/lib/queries";
 
 interface Category {
   id: string;
@@ -20,29 +22,16 @@ interface Category {
 }
 
 export default function CategoryManagement() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const qc = useQueryClient();
+  const { data: categories = [], isLoading: loading } = useQuery({
+    queryKey: qk.categories,
+    queryFn: () => rqFetchCategories() as Promise<Category[]>,
+    staleTime: 60_000,
+  });
   const [form, setForm] = useState<Category>({ id: "", name: "", description: "", image: "", alwaysAvailable: true, availableDays: [], availableTimeStart: "", availableTimeEnd: "" });
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  async function loadCategories() {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/categories", { cache: "no-store" });
-      const data = await res.json();
-      setCategories(data || []);
-    } catch (e) {
-      console.error(e);
-      toast.error("Failed to load categories");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -76,7 +65,7 @@ export default function CategoryManagement() {
       toast.success(editingId ? "Category updated" : "Category created");
       setForm({ id: "", name: "", description: "", image: "", alwaysAvailable: true, availableDays: [], availableTimeStart: "", availableTimeEnd: "" });
       setEditingId(null);
-      await loadCategories();
+      await qc.invalidateQueries({ queryKey: qk.categories });
     } catch (e) {
       console.error(e);
       toast.error(editingId ? "Failed to update category" : "Failed to create category");
@@ -114,7 +103,7 @@ export default function CategoryManagement() {
       const res = await fetch(`/api/categories/${encodeURIComponent(id)}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed");
       toast.success("Category deleted");
-      await loadCategories();
+      await qc.invalidateQueries({ queryKey: qk.categories });
     } catch (e) {
       console.error(e);
       toast.error("Failed to delete category");

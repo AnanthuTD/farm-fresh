@@ -4,12 +4,13 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import "@/app/fonts/fonts.css";
 import { CartProvider } from "@/lib/cart-context";
-import { Navbar } from "@/components/navbar";
+import NavbarGuard from "@/components/navbar-guard";
 import { Suspense } from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import AnalyticsProvider from "@/components/analytics-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { getFontClassNames } from "@/app/fonts/fonts";
+import QueryProvider from "@/components/query-provider";
 
 export const metadata: Metadata = {
   title: "Live Fresh",
@@ -39,16 +40,18 @@ export default function RootLayout({
       </head>
       <body className={`${getFontClassNames()}`}>
         <NuqsAdapter>
-          <CartProvider>
-            <AnalyticsProvider>
-              <Suspense fallback={<div>Loading...</div>}>
-                <Navbar />
-                <main className="min-h-screen">{children}</main>
-              </Suspense>
-            </AnalyticsProvider>
-          </CartProvider>
-          <Analytics />
-          <Toaster />
+          <QueryProvider>
+            <CartProvider>
+              <AnalyticsProvider>
+                <Suspense fallback={<div>Loading...</div>}>
+                  <NavbarGuard />
+                  <main className="min-h-screen">{children}</main>
+                </Suspense>
+              </AnalyticsProvider>
+            </CartProvider>
+            <Analytics />
+            <Toaster />
+          </QueryProvider>
         </NuqsAdapter>
       </body>
     </html>

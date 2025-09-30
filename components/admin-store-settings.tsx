@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchStoreSettings, qk } from "@/lib/queries";
 
 interface StoreSettings {
   weekdayOpen: string;
@@ -16,7 +18,12 @@ interface StoreSettings {
 }
 
 export default function AdminStoreSettings() {
-  const [loading, setLoading] = useState(true);
+  const qc = useQueryClient();
+  const { data, isLoading: loading } = useQuery({
+    queryKey: qk.storeSettings,
+    queryFn: fetchStoreSettings,
+    staleTime: 60_000,
+  });
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<StoreSettings>({
     weekdayOpen: "07:00",
@@ -31,42 +38,38 @@ export default function AdminStoreSettings() {
   const [rangeEnd, setRangeEnd] = useState<string>("");
 
   useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-        const res = await fetch("/api/store-settings", { cache: "no-store" });
-        const data = await res.json();
-        if (data) {
-          setForm({
-            weekdayOpen: data.weekdayOpen || "07:00",
-            weekdayClose: data.weekdayClose || "19:00",
-            sundayOpen: data.sundayOpen || "07:00",
-            sundayClose: data.sundayClose || "12:00",
-            offDates: Array.isArray(data.offDates) ? data.offDates : [],
-          });
-        }
-      } catch (e) {
-        console.error(e);
-        toast.error("Failed to load store settings");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+    if (data) {
+      setForm({
+        weekdayOpen: data.weekdayOpen || "07:00",
+        weekdayClose: data.weekdayClose || "19:00",
+        sundayOpen: data.sundayOpen || "07:00",
+        sundayClose: data.sundayClose || "12:00",
+        offDates: Array.isArray(data.offDates) ? data.offDates : [],
+      });
+    }
+  }, [data]);
+
+  const saveMutation = useMutation({
+    mutationFn: async (payload: StoreSettings) => {
+      const res = await fetch("/api/store-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("save failed");
+      return res.json();
+    },
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: qk.storeSettings });
+      toast.success("Settings saved");
+    },
+    onError: () => toast.error("Failed to save settings"),
+  });
 
   const save = async () => {
     try {
       setSaving(true);
-      const res = await fetch("/api/store-settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (!res.ok) throw new Error("save failed");
-      toast.success("Settings saved");
-    } catch (e) {
-      console.error(e);
-      toast.error("Failed to save settings");
+      await saveMutation.mutateAsync(form);
     } finally {
       setSaving(false);
     }

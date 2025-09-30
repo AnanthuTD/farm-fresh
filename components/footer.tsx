@@ -1,36 +1,21 @@
 "use client";
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
-import { useEffect, useState } from "react";
-
-interface StoreSettings {
-  weekdayOpen: string;
-  weekdayClose: string;
-  sundayOpen?: string;
-  sundayClose?: string;
-}
+import { useQuery } from "@tanstack/react-query";
+import { fetchStoreSettings, qk } from "@/lib/queries";
+import dayjs from "dayjs";
 
 export function Footer() {
-  const [settings, setSettings] = useState<StoreSettings | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/store-settings", { cache: "no-store" });
-        if (res.ok) {
-          const data = await res.json();
-          setSettings(data);
-        }
-      } catch (e) {
-        console.error("Failed to load store settings", e);
-      }
-    })();
-  }, []);
+  const { data: settings } = useQuery({
+    queryKey: qk.storeSettings,
+    queryFn: fetchStoreSettings,
+    staleTime: 60_000,
+  });
 
   const weekday = settings?.weekdayOpen && settings?.weekdayClose
-    ? `${settings.weekdayOpen} - ${settings.weekdayClose}`
+    ? `${dayjs(`1970-01-01T${settings.weekdayOpen}`).format("h:mm A")} - ${dayjs(`1970-01-01T${settings.weekdayClose}`).format("h:mm A")}`
     : "7:00 - 19:00";
   const sunday = settings?.sundayOpen && settings?.sundayClose
-    ? `${settings.sundayOpen} - ${settings.sundayClose}`
+    ? `${dayjs(`1970-01-01T${settings.sundayOpen}`).format("h:mm A")} - ${dayjs(`1970-01-01T${settings.sundayClose}`).format("h:mm A")}`
     : "7:00 - 12:00";
 
   return (

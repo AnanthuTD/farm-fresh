@@ -4,7 +4,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useSearchParams } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { fetchCategories, fetchProducts, qk } from "@/lib/queries"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -49,35 +51,16 @@ export function ProductsGrid() {
   const searchParams = useSearchParams()
   const categoryFilter = searchParams.get("category")
 
-  const [products, setProducts] = useState<ProductItem[]>([])
-  const [categories, setCategories] = useState<CategoryItem[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    let active = true
-    ;(async () => {
-      try {
-        setLoading(true)
-        const [pRes, cRes] = await Promise.all([
-          fetch("/api/products?all=1", { cache: "no-store" }),
-          fetch("/api/categories", { cache: "no-store" }),
-        ])
-        const pData = await pRes.json()
-        const cData = await cRes.json()
-        if (active) {
-          setProducts(Array.isArray(pData) ? pData : [])
-          setCategories(Array.isArray(cData) ? cData : [])
-        }
-      } catch (e) {
-        console.error("Failed to load products/categories", e)
-      } finally {
-        if (active) setLoading(false)
-      }
-    })()
-    return () => {
-      active = false
-    }
-  }, [])
+  const { data: products = [], isLoading: loadingProducts } = useQuery({
+    queryKey: qk.products(true),
+    queryFn: () => fetchProducts(true) as Promise<ProductItem[]>,
+    staleTime: 60_000,
+  })
+  const { data: categories = [], isLoading: loadingCategories } = useQuery({
+    queryKey: qk.categories,
+    queryFn: () => fetchCategories() as Promise<CategoryItem[]>,
+    staleTime: 60_000,
+  })
 
   const categoriesById = useMemo(() => {
     const map = new Map<string, CategoryItem>()
@@ -92,6 +75,8 @@ export function ProductsGrid() {
     }
     return list
   }, [products, categoryFilter])
+
+  const loading = loadingProducts || loadingCategories
 
   if (!loading && filtered.length === 0) {
     return (

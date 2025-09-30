@@ -5,30 +5,25 @@ import { ShoppingCart, Menu, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/lib/cart-context";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { fetchStoreSettings, qk } from "@/lib/queries";
 
 export function Navbar() {
   const { state } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
-  const [offDates, setOffDates] = useState<string[]>([]);
+  const { data: settings } = useQuery({
+    queryKey: qk.storeSettings,
+    queryFn: fetchStoreSettings,
+    staleTime: 60_000,
+  });
+  const offDates: string[] = (settings?.offDates as string[] | undefined) || [];
 
   const totalItems = state.items.reduce((sum, item) => sum + item.quantity, 0);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/store-settings", { cache: "no-store" });
-        if (res.ok) {
-          const data = await res.json();
-          if (data?.offDates) setOffDates(Array.isArray(data.offDates) ? data.offDates : []);
-        }
-      } catch (e) {
-        console.error("Failed to load store settings", e);
-      }
-    })();
-  }, []);
+  // offDates loaded by React Query
 
   const upcoming = useMemo(() => {
     const today = new Date();
