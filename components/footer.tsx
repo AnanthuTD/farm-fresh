@@ -1,6 +1,38 @@
+"use client";
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
+
+interface StoreSettings {
+  weekdayOpen: string;
+  weekdayClose: string;
+  sundayOpen?: string;
+  sundayClose?: string;
+}
 
 export function Footer() {
+  const [settings, setSettings] = useState<StoreSettings | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/store-settings", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          setSettings(data);
+        }
+      } catch (e) {
+        console.error("Failed to load store settings", e);
+      }
+    })();
+  }, []);
+
+  const weekday = settings?.weekdayOpen && settings?.weekdayClose
+    ? `${settings.weekdayOpen} - ${settings.weekdayClose}`
+    : "7:00 - 19:00";
+  const sunday = settings?.sundayOpen && settings?.sundayClose
+    ? `${settings.sundayOpen} - ${settings.sundayClose}`
+    : "7:00 - 12:00";
+
   return (
     <footer className="bg-foreground text-background py-12">
       <div className="max-w-7xl mx-auto px-4">
@@ -39,11 +71,11 @@ export function Footer() {
             <div className="space-y-2 text-sm text-background/80">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                <span>Mon-Sat: 7AM - 7PM</span>
+                <span>Mon-Sat: {weekday}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                <span>Sunday: 7AM - 12PM</span>
+                <span>Sunday: {sunday}</span>
               </div>
             </div>
           </div>

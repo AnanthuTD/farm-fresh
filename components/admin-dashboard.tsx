@@ -5,7 +5,8 @@ import { useAuth } from "@/lib/auth-context"
 import ProductManagement from "./product-management"
 import CategoryManagement from "./category-management"
 import AnalyticsDashboard from "./analytics-dashboard"
-import { LogOut, Package, BarChart3 } from "lucide-react"
+import { LogOut, Package, BarChart3, Settings } from "lucide-react"
+import AdminStoreSettings from "./admin-store-settings"
 
 export default function AdminDashboard() {
   const { logout } = useAuth()
@@ -28,7 +29,7 @@ export default function AdminDashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="products" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="products" className="flex items-center gap-2">
               <Package className="h-4 w-4" />
               Product Management
@@ -40,6 +41,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Analytics
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Store Settings
             </TabsTrigger>
           </TabsList>
 
@@ -53,6 +58,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="categories">
             <CategoryManagement />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <AdminStoreSettings />
           </TabsContent>
         </Tabs>
       </main>

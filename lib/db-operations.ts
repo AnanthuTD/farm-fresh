@@ -1,6 +1,7 @@
 import { getDatabase } from "./mongodb";
 import type { Product, Analytics } from "./models/Product";
 import type { Category } from "./models/Category";
+import type { StoreSettings } from "./models/StoreSettings";
 
 export async function getProducts(): Promise<Product[]> {
   const db = await getDatabase();
@@ -18,6 +19,47 @@ export async function getProducts(): Promise<Product[]> {
   }
 }
 
+// Store Settings
+export async function getStoreSettings(): Promise<StoreSettings | null> {
+  const db = await getDatabase();
+  if (!db) return null;
+
+  try {
+    const doc = await db
+      .collection<StoreSettings>("store_settings")
+      .findOne({});
+    return doc;
+  } catch (error) {
+    console.error("Error fetching store settings:", error);
+    return null;
+  }
+}
+
+export async function updateStoreSettings(
+  settings: Omit<StoreSettings, "_id" | "updatedAt">
+): Promise<boolean> {
+  const db = await getDatabase();
+  if (!db) return false;
+
+  try {
+    const result = await db
+      .collection<StoreSettings>("store_settings")
+      .updateOne(
+        {},
+        {
+          $set: {
+            ...settings,
+            updatedAt: new Date(),
+          },
+        },
+        { upsert: true }
+      );
+    return result.modifiedCount > 0 || !!result.upsertedId;
+  } catch (error) {
+    console.error("Error updating store settings:", error);
+    return false;
+  }
+}
 export async function getAllProducts(): Promise<Product[]> {
   const db = await getDatabase();
   if (!db) return [];
@@ -175,18 +217,16 @@ export async function deleteProduct(id: string): Promise<boolean> {
   if (!db) return false;
 
   try {
-    const result = await db
-      .collection<Product>("products")
-      .updateOne(
-        { id },
-        {
-          $set: {
-            available: false,
-            deletedAt: new Date(),
-            updatedAt: new Date(),
-          },
-        }
-      );
+    const result = await db.collection<Product>("products").updateOne(
+      { id },
+      {
+        $set: {
+          available: false,
+          deletedAt: new Date(),
+          updatedAt: new Date(),
+        },
+      }
+    );
     return result.modifiedCount > 0;
   } catch (error) {
     console.error("Error deleting product:", error);

@@ -1,18 +1,54 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, Menu } from "lucide-react";
+import { ShoppingCart, Menu, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/lib/cart-context";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const { state } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showNotif, setShowNotif] = useState(false);
+  const [offDates, setOffDates] = useState<string[]>([]);
 
   const totalItems = state.items.reduce((sum, item) => sum + item.quantity, 0);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/store-settings", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.offDates) setOffDates(Array.isArray(data.offDates) ? data.offDates : []);
+        }
+      } catch (e) {
+        console.error("Failed to load store settings", e);
+      }
+    })();
+  }, []);
+
+  const upcoming = useMemo(() => {
+    const today = new Date();
+    const dates = offDates
+      .map((d) => ({ raw: d, date: new Date(d + "T00:00:00") }))
+      .filter((x) => x.date >= new Date(today.getFullYear(), today.getMonth(), today.getDate()))
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .slice(0, 5);
+    return dates;
+  }, [offDates]);
+
+  const offTomorrow = useMemo(() => {
+    const t = new Date();
+    t.setDate(t.getDate() + 1);
+    const yyyy = t.getFullYear();
+    const mm = String(t.getMonth() + 1).padStart(2, '0');
+    const dd = String(t.getDate()).padStart(2, '0');
+    const iso = `${yyyy}-${mm}-${dd}`;
+    return offDates.includes(iso);
+  }, [offDates]);
 
   const navLinks = [
     { href: "/", label: "Home" },
@@ -52,8 +88,41 @@ export function Navbar() {
             ))}
           </div>
 
-          {/* Cart Icon */}
-          <div className="flex items-center space-x-4">
+          {/* Notifications + Cart */}
+          <div className="flex items-center space-x-4 relative">
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="sm"
+                className={`relative bg-transparent ${offTomorrow ? 'animate-bounce ring-2 ring-red-500' : ''}`}
+                onClick={() => setShowNotif((s) => !s)}
+                aria-label="Notifications"
+              >
+                <Bell className="h-4 w-4" />
+                {upcoming.length > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="absolute -top-2 -right-2 h-5 min-w-5 px-1 flex items-center justify-center p-0 text-xs"
+                  >
+                    {upcoming.length}
+                  </Badge>
+                )}
+              </Button>
+              {showNotif && (
+                <div className="absolute right-0 mt-2 w-64 bg-popover text-popover-foreground border rounded-md shadow-lg p-3 z-50">
+                  <div className="font-medium mb-2">Upcoming Off Days</div>
+                  {upcoming.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">No upcoming off days</div>
+                  ) : (
+                    <ul className="space-y-1 text-sm">
+                      {upcoming.map((x) => (
+                        <li key={x.raw}>{x.raw}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
             <Link href="/cart">
               <Button
                 variant="outline"
