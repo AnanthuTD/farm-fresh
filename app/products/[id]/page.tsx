@@ -49,7 +49,7 @@ interface Product {
   category: Category;
   price: number;
   weight: number;
-  weightUnit: 'kg' | 'g' | 'piece';
+  weightUnit: "kg" | "g" | "piece";
   available: boolean;
   sku?: string;
   barcode?: string;
@@ -82,7 +82,7 @@ export default function ProductDetailPage() {
         setProduct(data);
 
         // Fetch categories to check hideQuantity setting
-        const categoriesResponse = await fetch('/api/categories');
+        const categoriesResponse = await fetch("/api/categories");
         if (categoriesResponse.ok) {
           const categoriesData = await categoriesResponse.json();
           setCategories(categoriesData);
@@ -107,7 +107,9 @@ export default function ProductDetailPage() {
   }, [product]);
 
   // Check if quantity should be hidden for this product's category
-  const currentCategory = categories.find(cat => cat.id === product?.category);
+  const currentCategory = categories.find(
+    (cat) => cat.id === product?.category
+  );
   const shouldHideQuantity = currentCategory?.hideQuantity || false;
 
   if (isLoading) {
@@ -162,7 +164,7 @@ export default function ProductDetailPage() {
     });
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
     if (!product) return;
 
     const cartItem: CartItem = {
@@ -179,7 +181,7 @@ export default function ProductDetailPage() {
       customInstructions: customInstructions || undefined,
     };
 
-    const whatsappUrl = generateWhatsAppUrl([cartItem]);
+    const whatsappUrl = await generateWhatsAppUrl([cartItem]);
     window.open(whatsappUrl, "_blank");
   };
 
@@ -224,7 +226,7 @@ export default function ProductDetailPage() {
             <p className="text-lg text-muted-foreground mb-4">
               {product.description}
             </p>
-            
+
             <div className="space-y-4">
               {/* Product Details */}
               <div>
@@ -234,19 +236,21 @@ export default function ProductDetailPage() {
                 <div className="text-sm text-muted-foreground mb-4">
                   {product.weight} {product.weightUnit}
                 </div>
-                
+
                 {!product.available && (
                   <p className="text-red-500 font-semibold">
                     This product is currently out of stock.
                   </p>
                 )}
 
-                {product.category === 'chicken' && (
+                {product.category === "chicken" && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                     <p className="text-sm text-yellow-800">
-                      <strong>Note:</strong> For chicken products, quantity selection is not available online. 
-                      After placing your order, we'll contact you via WhatsApp to confirm the exact quantity 
-                      based on current availability and your preferences.
+                      <strong>Note:</strong> For chicken products, quantity
+                      selection is not available online. After placing your
+                      order, we'll contact you via WhatsApp to confirm the exact
+                      quantity based on current availability and your
+                      preferences.
                     </p>
                   </div>
                 )}
@@ -294,16 +298,17 @@ export default function ProductDetailPage() {
                 <div className="flex justify-between items-center text-lg font-semibold">
                   <span>Total:</span>
                   <span className="text-primary">
-                    {product.category === 'chicken' ? (
+                    {product.category === "chicken" ? (
                       <>Price confirmed via WhatsApp</>
                     ) : (
                       <>₹{product.price * quantity}</>
                     )}
                   </span>
                 </div>
-                {product.category === 'chicken' && (
+                {product.category === "chicken" && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Final price will be confirmed after quantity confirmation via WhatsApp
+                    Final price will be confirmed after quantity confirmation
+                    via WhatsApp
                   </p>
                 )}
               </div>

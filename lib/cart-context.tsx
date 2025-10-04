@@ -4,7 +4,7 @@ import type React from "react";
 import { createContext, useContext, useReducer, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { fetchProducts } from "./queries";
+import { fetchProducts, fetchWhatsAppNumber } from "./queries";
 
 export type Category = 'chicken' | 'fish' | 'beef' | 'mutton' | 'seafood' | 'combo' | 'other';
 
@@ -227,8 +227,6 @@ export async function fetchCartProducts() {
   }
 }
 
-export const STORE_WHATSAPP_NUMBER = "919544845854"; // Farm Fresh WhatsApp number
-
 export function generateWhatsAppMessage(
   items: CartItem[],
   customerAddress?: string
@@ -268,10 +266,11 @@ export function generateWhatsAppMessage(
   return encodeURIComponent(message);
 }
 
-export function generateWhatsAppUrl(
+export async function generateWhatsAppUrl(
   items: CartItem[],
   customerAddress?: string
-): string {
+): Promise<string> {
   const message = generateWhatsAppMessage(items, customerAddress);
-  return `https://wa.me/${STORE_WHATSAPP_NUMBER}?text=${message}`;
+  const whatsappNumber = await fetchWhatsAppNumber();
+  return `https://wa.me/${whatsappNumber}?text=${message}`;
 }

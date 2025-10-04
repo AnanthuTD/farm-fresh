@@ -49,7 +49,7 @@ export default function CartPage() {
     });
   };
 
-  const handleWhatsAppCheckout = () => {
+  const handleWhatsAppCheckout = async () => {
     if (state.items.length === 0) {
       toast("Cart is empty", {
         description: "Please add items to your cart before placing an order.",
@@ -66,24 +66,27 @@ export default function CartPage() {
     }
 
     const fullAddress = `${customerInfo.address}${
-      customerInfo.deliveryTime
-        ? `\nPreferred time: ${customerInfo.deliveryTime}`
-        : ""
-    }${customerInfo.notes ? `\nNotes: ${customerInfo.notes}` : ""}\nContact: ${
-      customerInfo.name
-    } - ${customerInfo.phone}`;
+      customerInfo.notes ? `\nNotes: ${customerInfo.notes}` : ""
+    }\nContact: ${customerInfo.name} - ${customerInfo.phone}`;
 
-    const whatsappUrl = generateWhatsAppUrl(state.items, fullAddress);
-    window.open(whatsappUrl, "_blank");
+    try {
+      const whatsappUrl = await generateWhatsAppUrl(state.items, fullAddress);
+      window.open(whatsappUrl, "_blank");
 
-    toast("Redirecting to WhatsApp", {
-      description: "Your order details have been prepared for WhatsApp.",
-    });
+      toast("Redirecting to WhatsApp", {
+        description: "Your order details have been prepared for WhatsApp.",
+      });
+    } catch (error) {
+      console.error("Error generating WhatsApp URL:", error);
+      toast("Error", {
+        description: "Failed to generate WhatsApp link. Please try again.",
+      });
+    }
   };
 
-  const handleSubmitOrder = (e: React.FormEvent) => {
+  const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    handleWhatsAppCheckout();
+    await handleWhatsAppCheckout();
   };
 
   const handleInputChange = (field: string, value: string) => {

@@ -14,6 +14,7 @@ interface StoreSettings {
   weekdayClose: string;
   sundayOpen?: string;
   sundayClose?: string;
+  whatsappNumber?: string;
   offDates: string[]; // YYYY-MM-DD
 }
 
@@ -30,6 +31,7 @@ export default function AdminStoreSettings() {
     weekdayClose: "19:00",
     sundayOpen: "07:00",
     sundayClose: "12:00",
+    whatsappNumber: "919544845854",
     offDates: [],
   });
 
@@ -44,6 +46,7 @@ export default function AdminStoreSettings() {
         weekdayClose: data.weekdayClose || "19:00",
         sundayOpen: data.sundayOpen || "07:00",
         sundayClose: data.sundayClose || "12:00",
+        whatsappNumber: data.whatsappNumber || "919544845854",
         offDates: Array.isArray(data.offDates) ? data.offDates : [],
       });
     }
@@ -138,6 +141,35 @@ export default function AdminStoreSettings() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Sunday Close</label>
                 <Input type="time" value={form.sundayClose} onChange={(e) => setForm({ ...form, sundayClose: e.target.value })} />
+              </div>
+            </div>
+          )}
+          <div>
+            <Button onClick={save} disabled={saving}>{saving ? "Saving..." : "Save Settings"}</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Contact Settings</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {loading ? (
+            <div>Loading...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">WhatsApp Number</label>
+                <Input
+                  type="tel"
+                  placeholder="919544845854"
+                  value={form.whatsappNumber}
+                  onChange={(e) => setForm({ ...form, whatsappNumber: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Include country code, no spaces or special characters (e.g., 919544845854)
+                </p>
               </div>
             </div>
           )}
