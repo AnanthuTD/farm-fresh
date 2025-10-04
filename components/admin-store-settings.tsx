@@ -4,7 +4,14 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { toast } from "sonner";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchStoreSettings, qk } from "@/lib/queries";
@@ -55,7 +62,7 @@ export default function AdminStoreSettings() {
   const saveMutation = useMutation({
     mutationFn: async (payload: StoreSettings) => {
       const res = await fetch("/api/store-settings", {
-        method: "PUT",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -97,8 +104,8 @@ export default function AdminStoreSettings() {
     const cur = new Date(start);
     while (cur <= end) {
       const y = cur.getFullYear();
-      const m = String(cur.getMonth() + 1).padStart(2, '0');
-      const d = String(cur.getDate()).padStart(2, '0');
+      const m = String(cur.getMonth() + 1).padStart(2, "0");
+      const d = String(cur.getDate()).padStart(2, "0");
       dates.push(`${y}-${m}-${d}`);
       cur.setDate(cur.getDate() + 1);
     }
@@ -128,24 +135,50 @@ export default function AdminStoreSettings() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Weekday Open</label>
-                <Input type="time" value={form.weekdayOpen} onChange={(e) => setForm({ ...form, weekdayOpen: e.target.value })} />
+                <Input
+                  type="time"
+                  value={form.weekdayOpen}
+                  onChange={(e) =>
+                    setForm({ ...form, weekdayOpen: e.target.value })
+                  }
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Weekday Close</label>
-                <Input type="time" value={form.weekdayClose} onChange={(e) => setForm({ ...form, weekdayClose: e.target.value })} />
+                <Input
+                  type="time"
+                  value={form.weekdayClose}
+                  onChange={(e) =>
+                    setForm({ ...form, weekdayClose: e.target.value })
+                  }
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Sunday Open</label>
-                <Input type="time" value={form.sundayOpen} onChange={(e) => setForm({ ...form, sundayOpen: e.target.value })} />
+                <Input
+                  type="time"
+                  value={form.sundayOpen}
+                  onChange={(e) =>
+                    setForm({ ...form, sundayOpen: e.target.value })
+                  }
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Sunday Close</label>
-                <Input type="time" value={form.sundayClose} onChange={(e) => setForm({ ...form, sundayClose: e.target.value })} />
+                <Input
+                  type="time"
+                  value={form.sundayClose}
+                  onChange={(e) =>
+                    setForm({ ...form, sundayClose: e.target.value })
+                  }
+                />
               </div>
             </div>
           )}
           <div>
-            <Button onClick={save} disabled={saving}>{saving ? "Saving..." : "Save Settings"}</Button>
+            <Button onClick={save} disabled={saving}>
+              {saving ? "Saving..." : "Save Settings"}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -165,16 +198,21 @@ export default function AdminStoreSettings() {
                   type="tel"
                   placeholder="919544845854"
                   value={form.whatsappNumber}
-                  onChange={(e) => setForm({ ...form, whatsappNumber: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, whatsappNumber: e.target.value })
+                  }
                 />
                 <p className="text-xs text-muted-foreground">
-                  Include country code, no spaces or special characters (e.g., 919544845854)
+                  Include country code, no spaces or special characters (e.g.,
+                  919544845854)
                 </p>
               </div>
             </div>
           )}
           <div>
-            <Button onClick={save} disabled={saving}>{saving ? "Saving..." : "Save Settings"}</Button>
+            <Button onClick={save} disabled={saving}>
+              {saving ? "Saving..." : "Save Settings"}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -187,21 +225,37 @@ export default function AdminStoreSettings() {
           <div className="flex gap-2 items-end">
             <div className="space-y-2">
               <label className="text-sm font-medium">Add off date</label>
-              <Input type="date" value={newOffDate} onChange={(e) => setNewOffDate(e.target.value)} />
+              <Input
+                type="date"
+                value={newOffDate}
+                onChange={(e) => setNewOffDate(e.target.value)}
+              />
             </div>
-            <Button onClick={addOffDate} disabled={!newOffDate}>Add</Button>
+            <Button onClick={addOffDate} disabled={!newOffDate}>
+              Add
+            </Button>
           </div>
 
           <div className="flex flex-wrap gap-2 items-end">
             <div className="space-y-2">
               <label className="text-sm font-medium">Off range start</label>
-              <Input type="date" value={rangeStart} onChange={(e) => setRangeStart(e.target.value)} />
+              <Input
+                type="date"
+                value={rangeStart}
+                onChange={(e) => setRangeStart(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Off range end</label>
-              <Input type="date" value={rangeEnd} onChange={(e) => setRangeEnd(e.target.value)} />
+              <Input
+                type="date"
+                value={rangeEnd}
+                onChange={(e) => setRangeEnd(e.target.value)}
+              />
             </div>
-            <Button onClick={addOffRange} disabled={!rangeStart || !rangeEnd}>Add Range</Button>
+            <Button onClick={addOffRange} disabled={!rangeStart || !rangeEnd}>
+              Add Range
+            </Button>
           </div>
 
           <Table>
@@ -214,14 +268,22 @@ export default function AdminStoreSettings() {
             <TableBody>
               {form.offDates.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={2} className="text-muted-foreground">No off dates</TableCell>
+                  <TableCell colSpan={2} className="text-muted-foreground">
+                    No off dates
+                  </TableCell>
                 </TableRow>
               )}
               {form.offDates.map((d) => (
                 <TableRow key={d}>
                   <TableCell>{d}</TableCell>
                   <TableCell>
-                    <Button variant="destructive" size="sm" onClick={() => removeOffDate(d)}>Remove</Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => removeOffDate(d)}
+                    >
+                      Remove
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
