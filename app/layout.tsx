@@ -11,6 +11,7 @@ import AnalyticsProvider from "@/components/analytics-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { getFontClassNames } from "@/app/fonts/fonts";
 import QueryProvider from "@/components/query-provider";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: "Live Fresh",
@@ -51,6 +52,7 @@ export default function RootLayout({
             </CartProvider>
             <Analytics />
             <Toaster />
+            <SpeedInsights />
           </QueryProvider>
         </NuqsAdapter>
       </body>
