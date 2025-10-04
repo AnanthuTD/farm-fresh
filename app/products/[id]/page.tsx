@@ -17,9 +17,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ShoppingCart, MessageCircle } from "lucide-react";
+import { ArrowLeft, ShoppingCart, MessageCircle, Loader2 } from "lucide-react";
 import {
-  products,
   useCart,
   generateWhatsAppUrl,
   type CartItem,
@@ -27,18 +26,79 @@ import {
 import { trackProductView } from "@/lib/analytics";
 import { toast } from "sonner";
 
+type Category =
+  | "chicken"
+  | "fish"
+  | "beef"
+  | "mutton"
+  | "seafood"
+  | "combo"
+  | "other";
+
+interface CategoryData {
+  id: string;
+  name: string;
+  hideQuantity?: boolean;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  category: Category;
+  price: number;
+  weight: number;
+  weightUnit: 'kg' | 'g' | 'piece';
+  available: boolean;
+  sku?: string;
+  barcode?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { dispatch } = useCart();
 
-  const product = products.find((p) => p.id === params.id);
-
-  const [selectedCutType, setSelectedCutType] = useState("");
-  const [isSkinless, setIsSkinless] = useState(false);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [categories, setCategories] = useState<CategoryData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [weight, setWeight] = useState(1);
   const [customInstructions, setCustomInstructions] = useState("");
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/products/${params.id}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch product");
+        }
+        const data = await response.json();
+        setProduct(data);
+
+        // Fetch categories to check hideQuantity setting
+        const categoriesResponse = await fetch('/api/categories');
+        if (categoriesResponse.ok) {
+          const categoriesData = await categoriesResponse.json();
+          setCategories(categoriesData);
+        }
+      } catch (err) {
+        console.error("Error fetching product:", err);
+        setError(err instanceof Error ? err.message : "Failed to load product");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (params.id) {
+      fetchProduct();
+    }
+  }, [params.id]);
 
   useEffect(() => {
     if (product) {
@@ -46,11 +106,26 @@ export default function ProductDetailPage() {
     }
   }, [product]);
 
-  if (!product) {
+  // Check if quantity should be hidden for this product's category
+  const currentCategory = categories.find(cat => cat.id === product?.category);
+  const shouldHideQuantity = currentCategory?.hideQuantity || false;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error || !product) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
+          <h1 className="text-2xl font-bold mb-4">
+            {error ? "Error Loading Product" : "Product Not Found"}
+          </h1>
+          {error && <p className="text-muted-foreground mb-4">{error}</p>}
           <Button onClick={() => router.push("/products")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Products
@@ -60,25 +135,21 @@ export default function ProductDetailPage() {
     );
   }
 
-  // Initialize cut type if not set
-  if (!selectedCutType && product.cutTypes.length > 0) {
-    setSelectedCutType(product.cutTypes[0]);
-  }
-
   const handleAddToCart = () => {
-    const cartItem: Omit<CartItem, "quantity"> & { quantity: number } = {
-      id: `${product.id}-${selectedCutType}-${
-        isSkinless ? "skinless" : "skin"
-      }-${Date.now()}`,
+    if (!product) return;
+
+    const cartItem: CartItem = {
+      id: `${product.id}-${Date.now()}`,
+      productId: product.id,
+      variantId: product.id,
       name: product.name,
       price: product.price,
-      cutType: selectedCutType,
-      category: product.category,
-      image: product.image,
-      skinless: product.hasSkinOption ? isSkinless : undefined,
+      image: product.image || "/placeholder.svg",
+      category: product.category as Category,
+      quantity: shouldHideQuantity ? 1 : quantity, // Default to 1 for chicken products
+      weight: product.weight,
+      weightUnit: product.weightUnit,
       customInstructions: customInstructions || undefined,
-      weight: weight,
-      quantity: quantity,
     };
 
     dispatch({
@@ -92,19 +163,20 @@ export default function ProductDetailPage() {
   };
 
   const handleBuyNow = () => {
+    if (!product) return;
+
     const cartItem: CartItem = {
-      id: `${product.id}-${selectedCutType}-${
-        isSkinless ? "skinless" : "skin"
-      }-${Date.now()}`,
+      id: `${product.id}-${Date.now()}`,
+      productId: product.id,
+      variantId: product.id,
       name: product.name,
       price: product.price,
-      cutType: selectedCutType,
-      category: product.category,
-      image: product.image,
-      skinless: product.hasSkinOption ? isSkinless : undefined,
+      image: product.image || "/placeholder.svg",
+      category: product.category as Category,
+      quantity: shouldHideQuantity ? 1 : quantity, // Default to 1 for chicken products
+      weight: product.weight,
+      weightUnit: product.weightUnit,
       customInstructions: customInstructions || undefined,
-      weight: weight,
-      quantity: quantity,
     };
 
     const whatsappUrl = generateWhatsAppUrl([cartItem]);
@@ -132,9 +204,15 @@ export default function ProductDetailPage() {
             className="object-cover"
           />
           <Badge className="absolute top-4 right-4 bg-primary text-primary-foreground">
-            {product.category.charAt(0).toUpperCase() +
-              product.category.slice(1)}
+            {product.category}
           </Badge>
+          {!product.available && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+              <span className="text-white text-2xl font-bold">
+                Currently Unavailable
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Product Details */}
@@ -146,72 +224,55 @@ export default function ProductDetailPage() {
             <p className="text-lg text-muted-foreground mb-4">
               {product.description}
             </p>
-            <div className="text-2xl font-bold text-primary">
-              ₹{product.price}/{product.weightUnit}
+            
+            <div className="space-y-4">
+              {/* Product Details */}
+              <div>
+                <div className="text-2xl font-bold text-primary mb-2">
+                  ₹{product.price}
+                </div>
+                <div className="text-sm text-muted-foreground mb-4">
+                  {product.weight} {product.weightUnit}
+                </div>
+                
+                {!product.available && (
+                  <p className="text-red-500 font-semibold">
+                    This product is currently out of stock.
+                  </p>
+                )}
+
+                {product.category === 'chicken' && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Note:</strong> For chicken products, quantity selection is not available online. 
+                      After placing your order, we'll contact you via WhatsApp to confirm the exact quantity 
+                      based on current availability and your preferences.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>Customize Your Order</CardTitle>
+              <CardTitle>Order Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Cut Type Selection */}
-              <div>
-                <Label htmlFor="cut-type">Cut Type</Label>
-                <Select
-                  value={selectedCutType}
-                  onValueChange={setSelectedCutType}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select cut type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {product.cutTypes.map((cutType) => (
-                      <SelectItem key={cutType} value={cutType}>
-                        {cutType}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Skin Option (for chicken only) */}
-              {product.hasSkinOption && (
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="skinless"
-                    checked={isSkinless}
-                    onCheckedChange={setIsSkinless}
-                  />
-                  <Label htmlFor="skinless">Skinless</Label>
-                </div>
-              )}
-
-              {/* Weight/Quantity */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* Quantity */}
+              {!shouldHideQuantity && (
                 <div>
-                  <Label htmlFor="weight">Weight ({product.weightUnit})</Label>
-                  <Input
-                    id="weight"
-                    type="number"
-                    min="0.5"
-                    step="0.5"
-                    value={weight}
-                    onChange={(e) => setWeight(Number(e.target.value))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="quantity">Number of pieces</Label>
+                  <Label htmlFor="quantity">Quantity</Label>
                   <Input
                     id="quantity"
                     type="number"
                     min="1"
                     value={quantity}
                     onChange={(e) => setQuantity(Number(e.target.value))}
+                    disabled={!product.available}
                   />
                 </div>
-              </div>
+              )}
 
               {/* Custom Instructions */}
               <div>
@@ -220,10 +281,11 @@ export default function ProductDetailPage() {
                 </Label>
                 <Textarea
                   id="instructions"
-                  placeholder="Any special cutting instructions or preferences..."
+                  placeholder="Any special instructions or preferences..."
                   value={customInstructions}
                   onChange={(e) => setCustomInstructions(e.target.value)}
                   rows={3}
+                  disabled={!product.available}
                 />
               </div>
 
@@ -232,9 +294,18 @@ export default function ProductDetailPage() {
                 <div className="flex justify-between items-center text-lg font-semibold">
                   <span>Total:</span>
                   <span className="text-primary">
-                    ₹{product.price * quantity}
+                    {product.category === 'chicken' ? (
+                      <>Price confirmed via WhatsApp</>
+                    ) : (
+                      <>₹{product.price * quantity}</>
+                    )}
                   </span>
                 </div>
+                {product.category === 'chicken' && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Final price will be confirmed after quantity confirmation via WhatsApp
+                  </p>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -243,11 +314,16 @@ export default function ProductDetailPage() {
                   onClick={handleAddToCart}
                   variant="outline"
                   className="w-full bg-transparent"
+                  disabled={!product.available}
                 >
                   <ShoppingCart className="w-4 h-4 mr-2" />
                   Add to Cart
                 </Button>
-                <Button onClick={handleBuyNow} className="w-full">
+                <Button
+                  onClick={handleBuyNow}
+                  className="w-full"
+                  disabled={!product.available}
+                >
                   <MessageCircle className="w-4 h-4 mr-2" />
                   Buy Now
                 </Button>

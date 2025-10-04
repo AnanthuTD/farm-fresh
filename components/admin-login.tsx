@@ -31,10 +31,10 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-red-600">Admin Login</CardTitle>
+          <CardTitle className="text-2xl font-bold text-primary">Admin Login</CardTitle>
           <CardDescription>Enter your credentials to access the admin panel</CardDescription>
         </CardHeader>
         <CardContent>
@@ -61,8 +61,8 @@ export default function AdminLogin() {
                 disabled={loading}
               />
             </div>
-            {error && <div className="text-red-600 text-sm text-center">{error}</div>}
-            <Button type="submit" className="w-full bg-red-600 hover:bg-red-700" disabled={loading}>
+            {error && <div className="text-destructive text-sm text-center">{error}</div>}
+            <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>

@@ -75,7 +75,7 @@ export default function AnalyticsDashboard() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">Analytics Dashboard</h2>
-        <p className="text-gray-600">Track your website performance and user engagement</p>
+        <p className="text-muted-foreground">Track your website performance and user engagement</p>
       </div>
 
       {/* Stats Cards */}
@@ -194,7 +194,7 @@ export default function AnalyticsDashboard() {
           <CardContent>
             <div className="space-y-2">
               {analytics.pageVisits.map((page, index) => (
-                <div key={index} className="flex justify-between items-center p-2 rounded-lg bg-gray-50">
+                <div key={index} className="flex justify-between items-center p-2 rounded-lg bg-card">
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="capitalize">
                       {page._id || "Unknown"}
@@ -221,7 +221,7 @@ export default function AnalyticsDashboard() {
           <CardContent>
             <div className="space-y-2">
               {analytics.productViews.slice(0, 10).map((product, index) => (
-                <div key={index} className="flex justify-between items-center p-2 rounded-lg bg-gray-50">
+                <div key={index} className="flex justify-between items-center p-2 rounded-lg bg-card">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">#{index + 1}</Badge>
                     <span className="font-medium">{product._id}</span>
@@ -251,7 +251,7 @@ export default function AnalyticsDashboard() {
           ) : (
             <div className="space-y-2">
               {interest.slice(0, 5).map((it, idx) => (
-                <div key={it._id} className="flex justify-between items-center p-2 rounded-lg bg-gray-50">
+                <div key={it._id} className="flex justify-between items-center p-2 rounded-lg bg-card">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">#{idx + 1}</Badge>
                     <span className="font-medium">{it._id}</span>

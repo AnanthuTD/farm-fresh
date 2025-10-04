@@ -3,14 +3,19 @@ import type { Product, Analytics } from "./models/Product";
 import type { Category } from "./models/Category";
 import type { StoreSettings } from "./models/StoreSettings";
 
-export async function getProducts(): Promise<Product[]> {
+export async function getProducts(category?: string): Promise<Product[]> {
   const db = await getDatabase();
   if (!db) return [];
 
   try {
+    const query: any = { available: true };
+    if (category) {
+      query.category = category;
+    }
+    
     const products = await db
       .collection<Product>("products")
-      .find({ available: true })
+      .find(query)
       .toArray();
     return products;
   } catch (error) {

@@ -19,6 +19,7 @@ interface Category {
   availableDays?: number[];
   availableTimeStart?: string;
   availableTimeEnd?: string;
+  hideQuantity?: boolean;
 }
 
 export default function CategoryManagement() {
@@ -28,7 +29,7 @@ export default function CategoryManagement() {
     queryFn: () => rqFetchCategories() as Promise<Category[]>,
     staleTime: 60_000,
   });
-  const [form, setForm] = useState<Category>({ id: "", name: "", description: "", image: "", alwaysAvailable: true, availableDays: [], availableTimeStart: "", availableTimeEnd: "" });
+  const [form, setForm] = useState<Category>({ id: "", name: "", description: "", image: "", alwaysAvailable: true, availableDays: [], availableTimeStart: "", availableTimeEnd: "", hideQuantity: false });
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -55,6 +56,7 @@ export default function CategoryManagement() {
         availableDays: form.availableDays || [],
         availableTimeStart: form.availableTimeStart || undefined,
         availableTimeEnd: form.availableTimeEnd || undefined,
+        hideQuantity: !!form.hideQuantity,
       };
       const res = await fetch(editingId ? `/api/categories/${encodeURIComponent(editingId)}` : "/api/categories", {
         method: editingId ? "PATCH" : "POST",
@@ -63,7 +65,7 @@ export default function CategoryManagement() {
       });
       if (!res.ok) throw new Error("Failed");
       toast.success(editingId ? "Category updated" : "Category created");
-      setForm({ id: "", name: "", description: "", image: "", alwaysAvailable: true, availableDays: [], availableTimeStart: "", availableTimeEnd: "" });
+      setForm({ id: "", name: "", description: "", image: "", alwaysAvailable: true, availableDays: [], availableTimeStart: "", availableTimeEnd: "", hideQuantity: false });
       setEditingId(null);
       await qc.invalidateQueries({ queryKey: qk.categories });
     } catch (e) {
@@ -94,6 +96,7 @@ export default function CategoryManagement() {
       availableDays: c.availableDays || [],
       availableTimeStart: c.availableTimeStart || "",
       availableTimeEnd: c.availableTimeEnd || "",
+      hideQuantity: c.hideQuantity ?? false,
     });
   };
 
@@ -143,6 +146,13 @@ export default function CategoryManagement() {
                 </div>
               </div>
               <div className="space-y-2">
+                <label className="text-sm font-medium">Hide Quantity Field</label>
+                <div>
+                  <input type="checkbox" checked={!!form.hideQuantity} onChange={(e) => setForm((f) => ({ ...f, hideQuantity: e.target.checked }))} />
+                  <span className="ml-2 text-sm">Hide quantity selection for this category</span>
+                </div>
+              </div>
+              <div className="space-y-2">
                 <label className="text-sm font-medium">Available Days</label>
                 <div className="flex flex-wrap gap-2">
                   {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d, idx) => (
@@ -166,7 +176,7 @@ export default function CategoryManagement() {
               <div className="flex gap-2">
                 <Button type="submit" disabled={submitting}>{submitting ? "Saving..." : editingId ? "Update Category" : "Save Category"}</Button>
                 {editingId && (
-                  <Button type="button" variant="outline" onClick={() => { setEditingId(null); setForm({ id: "", name: "", description: "", image: "", alwaysAvailable: true, availableDays: [], availableTimeStart: "", availableTimeEnd: "" }); }}>Cancel Edit</Button>
+                  <Button type="button" variant="outline" onClick={() => { setEditingId(null); setForm({ id: "", name: "", description: "", image: "", alwaysAvailable: true, availableDays: [], availableTimeStart: "", availableTimeEnd: "", hideQuantity: false }); }}>Cancel Edit</Button>
                 )}
               </div>
             </div>
@@ -202,7 +212,7 @@ export default function CategoryManagement() {
                     <TableCell className="max-w-sm truncate" title={c.image}>{c.image}</TableCell>
                     <TableCell className="text-sm">
                       {c.alwaysAvailable ? (
-                        <span className="inline-block px-2 py-1 rounded bg-green-100 text-green-700">Always</span>
+                        <span className="inline-block px-2 py-1 rounded bg-accent/20 text-foreground">Always</span>
                       ) : (
                         <div className="space-y-1">
                           <div>Days: {(c.availableDays||[]).map((d) => ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d]).join(", ") || "—"}</div>

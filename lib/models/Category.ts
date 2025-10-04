@@ -11,6 +11,8 @@ export interface Category {
   availableDays?: number[]; // 0=Sun ... 6=Sat
   availableTimeStart?: string; // "HH:MM" 24h, local time
   availableTimeEnd?: string;   // "HH:MM" 24h, local time
+  // Quantity settings
+  hideQuantity?: boolean; // if true, hide quantity field for this category
   createdAt: Date;
   updatedAt: Date;
 }

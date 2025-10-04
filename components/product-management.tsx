@@ -42,15 +42,22 @@ import { Plus, Edit, Trash2, Save, X } from "lucide-react";
 import type { Product } from "@/lib/models/Product";
 import Image from "next/image";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchCategories as rqFetchCategories, fetchProducts as rqFetchProducts, qk } from "@/lib/queries";
+import {
+  fetchCategories as rqFetchCategories,
+  fetchProducts as rqFetchProducts,
+  qk,
+} from "@/lib/queries";
 
-interface CategoryItem { id: string; name: string }
+interface CategoryItem {
+  id: string;
+  name: string;
+}
 
 export default function ProductManagement() {
   const qc = useQueryClient();
   const { data: products = [], isLoading: loading } = useQuery({
-    queryKey: qk.products(true),
-    queryFn: () => rqFetchProducts(true) as Promise<Product[]>,
+    queryKey: qk.products({ all: true }),
+    queryFn: () => rqFetchProducts({ all: true }) as Promise<Product[]>,
     staleTime: 30_000,
   });
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -62,8 +69,8 @@ export default function ProductManagement() {
     price: 0,
     image: "",
     description: "",
-    cutTypes: "",
-    skinOptions: "",
+    weight: 1,
+    weightUnit: "kg" as "kg" | "g" | "piece",
     available: true,
   });
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
@@ -77,18 +84,12 @@ export default function ProductManagement() {
 
     const productData = {
       ...formData,
-      cutTypes: formData.cutTypes
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-      skinOptions: formData.skinOptions
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
     };
 
     try {
-      const url = editingProduct ? `/api/products/${editingProduct.id}` : "/api/products";
+      const url = editingProduct
+        ? `/api/products/${editingProduct.id}`
+        : "/api/products";
       const method = editingProduct ? "PUT" : "POST";
       const res = await fetch(url, {
         method,
@@ -96,7 +97,7 @@ export default function ProductManagement() {
         body: JSON.stringify(productData),
       });
       if (res.ok) {
-        await qc.invalidateQueries({ queryKey: qk.products(true) });
+        await qc.invalidateQueries({ queryKey: qk.products({ all: true }) });
         resetForm();
         setIsAddDialogOpen(false);
         setEditingProduct(null);
@@ -115,8 +116,8 @@ export default function ProductManagement() {
       price: product.price,
       image: product.image,
       description: product.description,
-      cutTypes: product.cutTypes.join(", "),
-      skinOptions: product.skinOptions?.join(", ") || "",
+      weight: product.weight,
+      weightUnit: product.weightUnit,
       available: product.available,
     });
     setIsAddDialogOpen(true);
@@ -126,7 +127,8 @@ export default function ProductManagement() {
     if (confirm("Are you sure you want to delete this product?")) {
       try {
         const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
-        if (res.ok) await qc.invalidateQueries({ queryKey: qk.products(true) });
+        if (res.ok)
+          await qc.invalidateQueries({ queryKey: qk.products({ all: true }) });
       } catch (error) {
         console.error("Error deleting product:", error);
       }
@@ -141,8 +143,8 @@ export default function ProductManagement() {
       price: 0,
       image: "",
       description: "",
-      cutTypes: "",
-      skinOptions: "",
+      weight: 1,
+      weightUnit: "kg",
       available: true,
     });
     setEditingProduct(null);
@@ -157,11 +159,13 @@ export default function ProductManagement() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Product Management</h2>
-          <p className="text-gray-600">Manage your meat shop products</p>
+          <p className="text-muted-foreground">
+            Manage your meat shop products
+          </p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetForm} className="bg-red-600 hover:bg-red-700">
+            <Button onClick={resetForm}>
               <Plus className="h-4 w-4 mr-2" />
               Add Product
             </Button>
@@ -215,7 +219,11 @@ export default function ProductManagement() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder={categoriesLoading ? "Loading..." : "Select a category"} />
+                      <SelectValue
+                        placeholder={
+                          categoriesLoading ? "Loading..." : "Select a category"
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map((c) => (
@@ -269,30 +277,58 @@ export default function ProductManagement() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="cutTypes">Cut Types (comma separated)</Label>
+                  <Label htmlFor="weight">Weight</Label>
                   <Input
-                    id="cutTypes"
-                    value={formData.cutTypes}
+                    id="weight"
+                    type="number"
+                    value={formData.weight}
                     onChange={(e) =>
-                      setFormData({ ...formData, cutTypes: e.target.value })
+                      setFormData({
+                        ...formData,
+                        weight: Number(e.target.value),
+                      })
                     }
-                    placeholder="Whole, Pieces, Boneless"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="skinOptions">
-                    Skin Options (comma separated)
-                  </Label>
-                  <Input
-                    id="skinOptions"
-                    value={formData.skinOptions}
-                    onChange={(e) =>
-                      setFormData({ ...formData, skinOptions: e.target.value })
+                  <Label htmlFor="weightUnit">Unit</Label>
+                  <Select
+                    value={formData.weightUnit}
+                    onValueChange={(value: "kg" | "g" | "piece") =>
+                      setFormData({ ...formData, weightUnit: value })
                     }
-                    placeholder="Skin On, Skin Off"
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="kg">kg</SelectItem>
+                      <SelectItem value="g">g</SelectItem>
+                      <SelectItem value="piece">piece</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
+
+              {/* Quantity field commented out for chicken products */}
+              {/*
+              <div className="space-y-2">
+                <Label htmlFor="quantity">Quantity</Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  value={formData.quantity}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      quantity: Number(e.target.value),
+                    })
+                  }
+                  required
+                />
+              </div>
+              */}
 
               <div className="flex justify-end gap-2">
                 <Button
@@ -306,7 +342,7 @@ export default function ProductManagement() {
                   <X className="h-4 w-4 mr-2" />
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-red-600 hover:bg-red-700">
+                <Button type="submit">
                   <Save className="h-4 w-4 mr-2" />
                   {editingProduct ? "Update" : "Add"} Product
                 </Button>
@@ -356,7 +392,9 @@ export default function ProductManagement() {
                   <TableCell>₹{product.price}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Badge variant={product.available ? "default" : "destructive"}>
+                      <Badge
+                        variant={product.available ? "default" : "destructive"}
+                      >
                         {product.available ? "Available" : "Unavailable"}
                       </Badge>
                       <Button
@@ -364,20 +402,29 @@ export default function ProductManagement() {
                         variant="outline"
                         onClick={async () => {
                           try {
-                            const res = await fetch(`/api/products/${product.id}`, {
-                              method: "PUT",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ available: !product.available }),
-                            });
+                            const res = await fetch(
+                              `/api/products/${product.id}`,
+                              {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  available: !product.available,
+                                }),
+                              }
+                            );
                             if (res.ok) {
-                              await qc.invalidateQueries({ queryKey: qk.products(true) });
+                              await qc.invalidateQueries({
+                                queryKey: qk.products({ all: true }),
+                              });
                             }
                           } catch (e) {
                             console.error("Failed to toggle availability", e);
                           }
                         }}
                       >
-                        {product.available ? "Set Unavailable" : "Set Available"}
+                        {product.available
+                          ? "Set Unavailable"
+                          : "Set Available"}
                       </Button>
                     </div>
                   </TableCell>

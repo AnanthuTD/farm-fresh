@@ -2,23 +2,31 @@
 
 import type React from "react";
 import { createContext, useContext, useReducer, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { fetchProducts } from "./queries";
+
+export type Category = 'chicken' | 'fish' | 'beef' | 'mutton' | 'seafood' | 'combo' | 'other';
 
 export interface CartItem {
   id: string;
+  productId: string;
+  variantId: string;
   name: string;
   price: number;
   quantity: number;
-  cutType?: string;
-  category: "chicken" | "fish" | "beef";
+  category: Category;
   image: string;
-  skinless?: boolean; // For chicken products
   customInstructions?: string;
-  weight?: number;
+  weight: number;
+  weightUnit: 'kg' | 'g' | 'piece';
 }
 
 interface CartState {
   items: CartItem[];
   total: number;
+  products: any[]; // Products fetched from backend
+  loading: boolean;
 }
 
 type CartAction =
@@ -28,7 +36,9 @@ type CartAction =
     }
   | { type: "REMOVE_ITEM"; payload: string }
   | { type: "UPDATE_QUANTITY"; payload: { id: string; quantity: number } }
-  | { type: "CLEAR_CART" };
+  | { type: "CLEAR_CART" }
+  | { type: "SET_PRODUCTS"; payload: any[] }
+  | { type: "SET_LOADING"; payload: boolean };
 
 const CartContext = createContext<{
   state: CartState;
@@ -51,13 +61,19 @@ function cartReducer(state: CartState, action: CartAction): CartState {
               }
             : item
         );
-        return {
+        const newState = {
+          ...state,
           items: updatedItems,
           total: updatedItems.reduce(
             (sum, item) => sum + item.price * item.quantity,
             0
           ),
         };
+        // Save to localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('cart', JSON.stringify(newState));
+        }
+        return newState;
       }
 
       const newItem = {
@@ -65,26 +81,38 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         quantity: action.payload.quantity || 1,
       };
       const updatedItems = [...state.items, newItem];
-      return {
+      const newState = {
+        ...state,
         items: updatedItems,
         total: updatedItems.reduce(
           (sum, item) => sum + item.price * item.quantity,
           0
         ),
       };
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('cart', JSON.stringify(newState));
+      }
+      return newState;
     }
 
     case "REMOVE_ITEM": {
       const updatedItems = state.items.filter(
         (item) => item.id !== action.payload
       );
-      return {
+      const newState = {
+        ...state,
         items: updatedItems,
         total: updatedItems.reduce(
           (sum, item) => sum + item.price * item.quantity,
           0
         ),
       };
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('cart', JSON.stringify(newState));
+      }
+      return newState;
     }
 
     case "UPDATE_QUANTITY": {
@@ -96,17 +124,34 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         )
         .filter((item) => item.quantity > 0);
 
-      return {
+      const newState = {
+        ...state,
         items: updatedItems,
         total: updatedItems.reduce(
           (sum, item) => sum + item.price * item.quantity,
           0
         ),
       };
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('cart', JSON.stringify(newState));
+      }
+      return newState;
     }
 
     case "CLEAR_CART":
-      return { items: [], total: 0 };
+      const clearedState = { ...state, items: [], total: 0 };
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('cart', JSON.stringify(clearedState));
+      }
+      return clearedState;
+
+    case "SET_PRODUCTS":
+      return { ...state, products: action.payload };
+
+    case "SET_LOADING":
+      return { ...state, loading: action.payload };
 
     default:
       return state;
@@ -114,7 +159,27 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(cartReducer, { items: [], total: 0 });
+  // Load cart from localStorage on initialization
+  const getInitialState = (): CartState => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedCart = localStorage.getItem('cart');
+        if (savedCart) {
+          return JSON.parse(savedCart);
+        }
+      } catch (error) {
+        console.error('Error loading cart from localStorage:', error);
+      }
+    }
+    return {
+      items: [],
+      total: 0,
+      products: [],
+      loading: false
+    };
+  };
+
+  const [state, dispatch] = useReducer(cartReducer, getInitialState());
 
   return (
     <CartContext.Provider value={{ state, dispatch }}>
@@ -131,107 +196,36 @@ export function useCart() {
   return context;
 }
 
-export const products = [
-  {
-    id: "chicken-whole",
-    name: "Whole Chicken",
-    category: "chicken" as const,
-    price: 280,
-    image: "/whole-chicken-fresh.jpg",
-    cutTypes: ["Whole", "Cut into pieces", "Boneless", "Curry cut"],
-    description: "Fresh farm chicken, perfect for roasting or cutting",
-    hasSkinOption: true,
-    weightUnit: "kg",
-  },
-  {
-    id: "chicken-breast",
-    name: "Chicken Breast",
-    category: "chicken" as const,
-    price: 320,
-    image: "/chicken-breast-boneless.jpg",
-    cutTypes: ["Boneless", "With bone", "Fillet"],
-    description: "Tender chicken breast, ideal for grilling",
-    hasSkinOption: true,
-    weightUnit: "kg",
-  },
-  {
-    id: "chicken-legs",
-    name: "Chicken Drumsticks",
-    category: "chicken" as const,
-    price: 240,
-    image: "/chicken-drumsticks-fresh.jpg",
-    cutTypes: ["Whole legs", "Drumsticks only", "Thighs"],
-    description: "Juicy chicken drumsticks, great for BBQ",
-    hasSkinOption: true,
-    weightUnit: "kg",
-  },
-  {
-    id: "fish-pomfret",
-    name: "Pomfret Fish",
-    category: "fish" as const,
-    price: 450,
-    image: "/pomfret-fish-fresh.jpg",
-    cutTypes: ["Whole", "Cleaned", "Filleted", "Curry cut"],
-    description: "Fresh pomfret, excellent for frying or curry",
-    hasSkinOption: false,
-    weightUnit: "kg",
-  },
-  {
-    id: "fish-salmon",
-    name: "Salmon Fillet",
-    category: "fish" as const,
-    price: 800,
-    image: "/salmon-fillet-fresh.jpg",
-    cutTypes: ["Fillet", "Steaks", "Whole"],
-    description: "Premium salmon fillet, rich in omega-3",
-    hasSkinOption: false,
-    weightUnit: "kg",
-  },
-  {
-    id: "fish-prawns",
-    name: "Fresh Prawns",
-    category: "fish" as const,
-    price: 600,
-    image: "/fresh-prawns-cleaned.jpg",
-    cutTypes: ["With shell", "Peeled", "Deveined", "Butterfly cut"],
-    description: "Fresh prawns, perfect for curries and stir-fry",
-    hasSkinOption: false,
-    weightUnit: "kg",
-  },
-  {
-    id: "beef-steak",
-    name: "Beef Steak",
-    category: "beef" as const,
-    price: 650,
-    image: "/beef-steak-premium.jpg",
-    cutTypes: ["Ribeye", "Sirloin", "Tenderloin", "T-bone"],
-    description: "Premium beef steak, perfectly marbled",
-    hasSkinOption: false,
-    weightUnit: "kg",
-  },
-  {
-    id: "beef-mince",
-    name: "Beef Mince",
-    category: "beef" as const,
-    price: 380,
-    image: "/beef-mince-fresh.jpg",
-    cutTypes: ["Regular", "Lean", "Extra lean", "Coarse ground"],
-    description: "Fresh ground beef, ideal for burgers and kebabs",
-    hasSkinOption: false,
-    weightUnit: "kg",
-  },
-  {
-    id: "beef-ribs",
-    name: "Beef Ribs",
-    category: "beef" as const,
-    price: 520,
-    image: "/beef-ribs-bone-in.jpg",
-    cutTypes: ["Bone-in", "Boneless", "Short ribs", "Back ribs"],
-    description: "Tender beef ribs, perfect for slow cooking",
-    hasSkinOption: false,
-    weightUnit: "kg",
-  },
-];
+// Hook to fetch products and update cart context
+export function useCartProducts() {
+  const { dispatch } = useCart();
+
+  const { data: products = [], isLoading } = useQuery({
+    queryKey: ["cart-products"],
+    queryFn: () => fetchProducts({ all: true }),
+    staleTime: 60_000,
+  });
+
+  useEffect(() => {
+    if (products.length > 0) {
+      dispatch({ type: "SET_PRODUCTS", payload: products });
+    }
+    dispatch({ type: "SET_LOADING", payload: isLoading });
+  }, [products, isLoading, dispatch]);
+
+  return { products, isLoading };
+}
+
+// Function to fetch products from backend
+export async function fetchCartProducts() {
+  try {
+    const products = await fetchProducts({ all: true });
+    return products;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return [];
+  }
+}
 
 export const STORE_WHATSAPP_NUMBER = "919544845854"; // Farm Fresh WhatsApp number
 
@@ -243,14 +237,15 @@ export function generateWhatsAppMessage(
 
   items.forEach((item, index) => {
     message += `${index + 1}. *${item.name}*\n`;
-    message += `   • Cut: ${item.cutType || "Standard"}\n`;
-    if (item.skinless !== undefined) {
-      message += `   • Skin: ${item.skinless ? "Skinless" : "With skin"}\n`;
-    }
-    message += `   • Quantity: ${item.quantity} ${
-      item.weight ? `(${item.weight}kg)` : "piece(s)"
+    message += `   • Weight: ${item.weight} ${
+      item.weightUnit === "g" ? "g" : "kg"
     }\n`;
-    message += `   • Price: ₹${item.price} each\n`;
+    message += `   • Quantity: ${item.quantity} ${
+      item.weightUnit === "piece" ? "piece(s)" : ""
+    }\n`;
+    message += `   • Price: ₹${item.price} ${
+      item.weightUnit === "piece" ? "each" : `per ${item.weightUnit}`
+    }\n`;
     if (item.customInstructions) {
       message += `   • Special instructions: ${item.customInstructions}\n`;
     }

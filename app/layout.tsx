@@ -38,14 +38,14 @@ export default function RootLayout({
         />
         <meta name="apple-mobile-web-app-title" content="Live Fresh" />
       </head>
-      <body className={`${getFontClassNames()}`}>
+      <body className={`${getFontClassNames()} font-sans`}>
         <NuqsAdapter>
           <QueryProvider>
             <CartProvider>
               <AnalyticsProvider>
                 <Suspense fallback={<div>Loading...</div>}>
                   <NavbarGuard />
-                  <main className="min-h-screen">{children}</main>
+                  <main className="min-h-screen bg-background">{children}</main>
                 </Suspense>
               </AnalyticsProvider>
             </CartProvider>

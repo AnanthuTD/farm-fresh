@@ -121,207 +121,314 @@ export default function CartPage() {
               <CardTitle>Cart Items ({state.items.length})</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {state.items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-start gap-4 p-4 border rounded-lg"
-                >
-                  <div className="relative h-16 w-16 flex-shrink-0">
-                    <Image
-                      src={item.image || "/placeholder.svg"}
-                      alt={item.name}
-                      fill
-                      className="object-cover rounded"
-                    />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground">
-                      {item.name}
-                    </h3>
-                    <div className="text-sm text-muted-foreground space-y-1">
-                      <p>Cut: {item.cutType}</p>
-                      {item.skinless !== undefined && (
-                        <p>Skin: {item.skinless ? "Skinless" : "With skin"}</p>
-                      )}
-                      {item.weight && <p>Weight: {item.weight}kg</p>}
-                      {item.customInstructions && (
-                        <p className="text-xs italic">
-                          Instructions: {item.customInstructions}
-                        </p>
-                      )}
-                    </div>
-                    <Badge variant="secondary" className="mt-1">
-                      {item.category.charAt(0).toUpperCase() +
-                        item.category.slice(1)}
-                    </Badge>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <span className="w-8 text-center font-medium">
-                      {item.quantity}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <div className="text-right">
-                    <p className="font-semibold text-foreground">
-                      ₹{item.price * item.quantity}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      ₹{item.price} each
-                    </p>
-                  </div>
-
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeItem(item.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
+              {state.items.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">🛒</div>
+                  <h3 className="text-lg font-semibold mb-2">
+                    Your cart is empty
+                  </h3>
+                  <p className="text-muted-foreground mb-6">
+                    Add some delicious products to get started!
+                  </p>
+                  <Button asChild>
+                    <a href="/products">Browse Products</a>
                   </Button>
                 </div>
-              ))}
+              ) : (
+                state.items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-start gap-4 p-4 border rounded-lg"
+                  >
+                    <div className="relative h-16 w-16 flex-shrink-0">
+                      <Image
+                        src={item.image || "/placeholder.svg"}
+                        alt={item.name}
+                        fill
+                        className="object-cover rounded"
+                      />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground">
+                        {item.name}
+                      </h3>
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        {item.weight && (
+                          <p>
+                            Weight: {item.weight}{" "}
+                            {item.weightUnit === "g" ? "g" : "kg"}
+                          </p>
+                        )}
+                        {item.customInstructions && (
+                          <p className="text-xs italic">
+                            Instructions: {item.customInstructions}
+                          </p>
+                        )}
+                      </div>
+                      <Badge variant="secondary" className="mt-1">
+                        {item.category.charAt(0).toUpperCase() +
+                          item.category.slice(1)}
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() =>
+                          updateQuantity(item.id, item.quantity - 1)
+                        }
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="w-8 text-center font-medium">
+                        {item.quantity}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() =>
+                          updateQuantity(item.id, item.quantity + 1)
+                        }
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    <div className="text-right">
+                      {item.category === "chicken" ? (
+                        <div>
+                          <p className="font-semibold text-foreground">
+                            Price on WhatsApp
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Contact us for pricing
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="font-semibold text-foreground">
+                            ₹{item.price * item.quantity}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            ₹{item.price} each
+                          </p>
+                        </>
+                      )}
+                    </div>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeItem(item.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </div>
 
         {/* Order Summary & Checkout */}
         <div>
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Order Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span>₹{state.total}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Delivery Fee</span>
-                  <span>₹50</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between font-semibold text-lg">
-                  <span>Total</span>
-                  <span>₹{state.total + 50}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {state.items.length > 0 ? (
+            <>
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Order Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {(() => {
+                      const nonChickenItems = state.items.filter(
+                        (item) => item.category !== "chicken"
+                      );
+                      const chickenItems = state.items.filter(
+                        (item) => item.category === "chicken"
+                      );
+                      const subtotal = nonChickenItems.reduce(
+                        (sum, item) => sum + item.price * item.quantity,
+                        0
+                      );
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Delivery Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmitOrder} className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Full Name *</Label>
-                  <Input
-                    id="name"
-                    value={customerInfo.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    required
-                  />
-                </div>
+                      return (
+                        <>
+                          {nonChickenItems.length > 0 && (
+                            <>
+                              <div className="flex justify-between">
+                                <span>Subtotal</span>
+                                <span>₹{subtotal}</span>
+                              </div>
+                              {chickenItems.length > 0 && (
+                                <div className="text-sm text-muted-foreground">
+                                  *Chicken items priced separately via WhatsApp
+                                </div>
+                              )}
+                            </>
+                          )}
+                          {chickenItems.length > 0 &&
+                            nonChickenItems.length === 0 && (
+                              <div className="text-sm text-muted-foreground">
+                                *All items are chicken - pricing will be
+                                provided via WhatsApp
+                              </div>
+                            )}
+                          <div className="flex justify-between">
+                            <span>Delivery Fee</span>
+                            <span>Free</span>
+                          </div>
+                          <Separator />
+                          <div className="flex justify-between font-semibold text-lg">
+                            <span>Total</span>
+                            <span>₹{subtotal}</span>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </CardContent>
+              </Card>
 
-                <div>
-                  <Label htmlFor="phone">Phone Number *</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={customerInfo.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    required
-                  />
-                </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Delivery Information</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSubmitOrder} className="space-y-4">
+                    <div>
+                      <Label htmlFor="name">Full Name *</Label>
+                      <Input
+                        id="name"
+                        value={customerInfo.name}
+                        onChange={(e) =>
+                          handleInputChange("name", e.target.value)
+                        }
+                        required
+                      />
+                    </div>
 
-                <div>
-                  <Label htmlFor="email">Email (Optional)</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={customerInfo.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                  />
-                </div>
+                    <div>
+                      <Label htmlFor="phone">Phone Number *</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={customerInfo.phone}
+                        onChange={(e) =>
+                          handleInputChange("phone", e.target.value)
+                        }
+                        required
+                      />
+                    </div>
 
-                <div>
-                  <Label htmlFor="address">Delivery Address *</Label>
-                  <Textarea
-                    id="address"
-                    value={customerInfo.address}
-                    onChange={(e) =>
-                      handleInputChange("address", e.target.value)
-                    }
-                    required
-                    rows={3}
-                  />
-                </div>
+                    <div>
+                      <Label htmlFor="email">Email (Optional)</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={customerInfo.email}
+                        onChange={(e) =>
+                          handleInputChange("email", e.target.value)
+                        }
+                      />
+                    </div>
 
-                <div>
-                  <Label htmlFor="deliveryTime">Preferred Delivery Time</Label>
-                  <Select
-                    value={customerInfo.deliveryTime}
-                    onValueChange={(value) =>
-                      handleInputChange("deliveryTime", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select time slot" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Morning (9 AM - 12 PM)">
-                        Morning (9 AM - 12 PM)
-                      </SelectItem>
-                      <SelectItem value="Afternoon (12 PM - 4 PM)">
-                        Afternoon (12 PM - 4 PM)
-                      </SelectItem>
-                      <SelectItem value="Evening (4 PM - 8 PM)">
-                        Evening (4 PM - 8 PM)
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div>
+                      <Label htmlFor="address">Delivery Address *</Label>
+                      <Textarea
+                        id="address"
+                        value={customerInfo.address}
+                        onChange={(e) =>
+                          handleInputChange("address", e.target.value)
+                        }
+                        required
+                        rows={3}
+                      />
+                    </div>
 
-                <div>
-                  <Label htmlFor="notes">Special Instructions (Optional)</Label>
-                  <Textarea
-                    id="notes"
-                    value={customerInfo.notes}
-                    onChange={(e) => handleInputChange("notes", e.target.value)}
-                    rows={2}
-                    placeholder="Any special requests or notes..."
-                  />
-                </div>
+                    {/* <div>
+                      <Label htmlFor="deliveryTime">
+                        Preferred Delivery Time
+                      </Label>
+                      <Select
+                        value={customerInfo.deliveryTime}
+                        onValueChange={(value) =>
+                          handleInputChange("deliveryTime", value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select time slot" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Morning (9 AM - 12 PM)">
+                            Morning (9 AM - 12 PM)
+                          </SelectItem>
+                          <SelectItem value="Afternoon (12 PM - 4 PM)">
+                            Afternoon (12 PM - 4 PM)
+                          </SelectItem>
+                          <SelectItem value="Evening (4 PM - 8 PM)">
+                            Evening (4 PM - 8 PM)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div> */}
 
-                <Button type="submit" className="w-full" size="lg">
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Checkout via WhatsApp - ₹{state.total + 50}
-                </Button>
+                    <div>
+                      <Label htmlFor="notes">
+                        Special Instructions (Optional)
+                      </Label>
+                      <Textarea
+                        id="notes"
+                        value={customerInfo.notes}
+                        onChange={(e) =>
+                          handleInputChange("notes", e.target.value)
+                        }
+                        rows={2}
+                        placeholder="Any special requests or notes..."
+                      />
+                    </div>
 
-                <p className="text-xs text-muted-foreground text-center">
-                  You&apos;ll be redirected to WhatsApp to complete your order
+                    <Button type="submit" className="w-full" size="lg">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      {(() => {
+                        const nonChickenItems = state.items.filter(
+                          (item) => item.category !== "chicken"
+                        );
+                        const subtotal = nonChickenItems.reduce(
+                          (sum, item) => sum + item.price * item.quantity,
+                          0
+                        );
+                        return `Checkout via WhatsApp - ₹${subtotal}${
+                          state.items.some(
+                            (item) => item.category === "chicken"
+                          )
+                            ? " + Chicken"
+                            : ""
+                        }`;
+                      })()}
+                    </Button>
+
+                    <p className="text-xs text-muted-foreground text-center">
+                      You&apos;ll be redirected to WhatsApp to complete your
+                      order
+                    </p>
+                  </form>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12">
+                <p className="text-muted-foreground">
+                  Add items to your cart to see order summary and checkout
+                  options.
                 </p>
-              </form>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

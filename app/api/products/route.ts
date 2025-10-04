@@ -3,12 +3,21 @@ import { getProducts, getAllProducts, createProduct } from "@/lib/db-operations"
 
 export async function GET(request: NextRequest) {
   try {
-    const all = request.nextUrl.searchParams.get("all")
-    const products = all ? await getAllProducts() : await getProducts()
-    return NextResponse.json(products)
+    const searchParams = request.nextUrl.searchParams;
+    const all = searchParams.get("all") === "true";
+    const category = searchParams.get("category") || undefined;
+    
+    const products = all 
+      ? await getAllProducts() 
+      : await getProducts(category);
+      
+    return NextResponse.json(products);
   } catch (error) {
-    console.error("Error fetching products:", error)
-    return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 })
+    console.error("Error fetching products:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch products" }, 
+      { status: 500 }
+    );
   }
 }
 

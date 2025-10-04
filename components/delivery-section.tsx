@@ -21,7 +21,7 @@ const features = [
 
 export function DeliverySection() {
   return (
-    <section className="py-16 lg:py-24 bg-card">
+    <section className="py-16 lg:py-24 bg-background">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -37,7 +37,7 @@ export function DeliverySection() {
           {features.map((feature, index) => (
             <Card
               key={index}
-              className="text-center hover:shadow-md transition-shadow"
+              className="text-center border-secondary/40 border shadow-sm hover:shadow-md transition-shadow"
             >
               <CardContent className="p-6">
                 <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
