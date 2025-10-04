@@ -3,7 +3,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchProductInterest, fetchProducts, qk } from "@/lib/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function InterestPage() {
   const { data: interest = [], isLoading } = useQuery({
@@ -12,8 +19,8 @@ export default function InterestPage() {
     staleTime: 60_000,
   });
   const { data: products = [] } = useQuery({
-    queryKey: qk.products(true),
-    queryFn: () => fetchProducts(true),
+    queryKey: qk.products({ all: true }),
+    queryFn: () => fetchProducts({ all: true }),
     staleTime: 60_000,
   });
 
@@ -36,14 +43,22 @@ export default function InterestPage() {
               </TableHeader>
               <TableBody>
                 {isLoading && (
-                  <TableRow><TableCell colSpan={2}>Loading...</TableCell></TableRow>
+                  <TableRow>
+                    <TableCell colSpan={2}>Loading...</TableCell>
+                  </TableRow>
                 )}
                 {!isLoading && interest.length === 0 && (
-                  <TableRow><TableCell colSpan={2} className="text-muted-foreground">No interest recorded yet</TableCell></TableRow>
+                  <TableRow>
+                    <TableCell colSpan={2} className="text-muted-foreground">
+                      No interest recorded yet
+                    </TableCell>
+                  </TableRow>
                 )}
                 {interest.map((r) => (
                   <TableRow key={r._id}>
-                    <TableCell className="font-medium">{nameById.get(r._id) || r._id}</TableCell>
+                    <TableCell className="font-medium">
+                      {nameById.get(r._id) || r._id}
+                    </TableCell>
                     <TableCell className="text-right">{r.count}</TableCell>
                   </TableRow>
                 ))}
